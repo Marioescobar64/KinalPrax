@@ -1,26 +1,24 @@
 import { useState } from "react";
-import { PlusIcon, PencilIcon, TrashIcon, CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { CompanyModal } from "./CompanyModal";
 
 const mockCompanies = [
-  { id: 1, name: "Tech Solutions S.A.", nit: "123456789", sector: "Tecnología", contact: "contacto@techsolutions.com", phone: "25412345" },
-  { id: 2, name: "Constructora Moderna", nit: "987654321", sector: "Construcción", contact: "info@constructora.com", phone: "78945612" },
+  { id: 1, nombreEmpresa: "Tech Solutions S.A.", direccion: "Av. Las Américas 12-30", encargado: "Tecnología", correo: "contacto@techsolutions.com", telefono: "25412345" },
+  { id: 2, nombreEmpresa: "Constructora Moderna", direccion: "Calzada Roosevelt 4-50", encargado: "Construcción", correo: "info@constructora.com", telefono: "78945612" },
 ];
 
 export const Company = () => {
   const [companies, setCompanies] = useState(mockCompanies);
   const [showModal, setShowModal] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [formData, setFormData] = useState({ name: "", nit: "", sector: "", contact: "", phone: "" });
+  const [selectedCompany, setSelectedCompany] = useState(null);
 
   const handleAdd = () => {
-    setEditingId(null);
-    setFormData({ name: "", nit: "", sector: "", contact: "", phone: "" });
+    setSelectedCompany(null);
     setShowModal(true);
   };
 
   const handleEdit = (company) => {
-    setEditingId(company.id);
-    setFormData(company);
+    setSelectedCompany(company);
     setShowModal(true);
   };
 
@@ -30,131 +28,79 @@ export const Company = () => {
     }
   };
 
-  const handleSave = () => {
-    if (editingId) {
-      setCompanies(companies.map(c => c.id === editingId ? { ...formData, id: editingId } : c));
+  const handleSave = (data) => {
+    if (selectedCompany) {
+      setCompanies(companies.map(c => c.id === selectedCompany.id ? { ...data, id: selectedCompany.id } : c));
     } else {
-      setCompanies([...companies, { ...formData, id: Date.now() }]);
+      setCompanies([...companies, { ...data, id: Date.now() }]);
     }
     setShowModal(false);
   };
 
   return (
-    <section className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-[#2C1506]">Empresas</h1>
-          <p className="text-sm text-[#2C1506]/80 mt-1">Gestión de empresas afiliadas</p>
-        </div>
-        <button
-          onClick={handleAdd}
-          className="flex items-center gap-2 bg-[#C00000] text-white px-4 py-2 rounded-lg hover:bg-[#A00000] transition"
-        >
-          <PlusIcon className="w-5 h-5" />
-          Nueva Empresa
-        </button>
-      </div>
-
-      <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-[#FFF8F0] border-b border-[#C00000]/20">
-            <tr>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Nombre</th>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">NIT</th>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Sector</th>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Contacto</th>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Teléfono</th>
-              <th className="px-6 py-3 text-center font-semibold text-[#2C1506]">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {companies.map((company) => (
-              <tr key={company.id} className="border-b border-[#C00000]/10 hover:bg-[#FFF8F0]/50 transition">
-                <td className="px-6 py-4 text-[#2C1506] font-medium">{company.name}</td>
-                <td className="px-6 py-4 text-[#2C1506]/80">{company.nit}</td>
-                <td className="px-6 py-4 text-[#2C1506]/80">{company.sector}</td>
-                <td className="px-6 py-4 text-[#2C1506]/80">{company.contact}</td>
-                <td className="px-6 py-4 text-[#2C1506]/80">{company.phone}</td>
-                <td className="px-6 py-4 flex justify-center gap-2">
-                  <button
-                    onClick={() => handleEdit(company)}
-                    className="p-2 text-[#C00000] hover:bg-[#C00000]/10 rounded transition"
-                  >
-                    <PencilIcon className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(company.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded transition"
-                  >
-                    <TrashIcon className="w-4 h-4" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {showModal && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 shadow-lg">
-            <h2 className="text-xl font-bold text-[#2C1506] mb-4">
-              {editingId ? "Editar Empresa" : "Nueva Empresa"}
-            </h2>
-            <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Nombre"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              />
-              <input
-                type="text"
-                placeholder="NIT"
-                value={formData.nit}
-                onChange={(e) => setFormData({ ...formData, nit: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              />
-              <input
-                type="text"
-                placeholder="Sector"
-                value={formData.sector}
-                onChange={(e) => setFormData({ ...formData, sector: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              />
-              <input
-                type="email"
-                placeholder="Contacto"
-                value={formData.contact}
-                onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              />
-              <input
-                type="text"
-                placeholder="Teléfono"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              />
-            </div>
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={handleSave}
-                className="flex-1 flex items-center justify-center gap-2 bg-[#C00000] text-white py-2 rounded-lg hover:bg-[#A00000] transition"
-              >
-                <CheckIcon className="w-4 h-4" /> Guardar
-              </button>
-              <button
-                onClick={() => setShowModal(false)}
-                className="flex-1 flex items-center justify-center gap-2 bg-gray-300 text-[#2C1506] py-2 rounded-lg hover:bg-gray-400 transition"
-              >
-                <XMarkIcon className="w-4 h-4" /> Cancelar
-              </button>
-            </div>
+    <div className="min-h-screen bg-[#072343] p-8 font-sans">
+      <section className="max-w-7xl mx-auto space-y-8">
+        
+        {/* HEADER */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-extrabold text-[#D97736] tracking-tight">Empresas</h1>
+            <p className="text-sm text-gray-300 mt-1.5">Gestión de empresas afiliadas</p>
           </div>
+          <button
+            onClick={handleAdd}
+            className="flex items-center gap-2 bg-[#C00000] text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-black/20 hover:bg-[#A00000] transition-all transform hover:scale-[1.02]"
+          >
+            <PlusIcon className="w-5 h-5 stroke-[2.5]" />
+            Nueva Empresa
+          </button>
         </div>
-      )}
-    </section>
+
+        {/* TABLA ADAPTABLE */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-x-auto border border-white/10">
+          <table className="w-full text-sm text-[#2C1506]">
+            <thead className="bg-[#FFF8F0] border-b border-gray-100">
+              <tr>
+                <th className="px-6 py-4 text-left font-bold text-gray-700 tracking-wide">Nombre</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-600 tracking-wide">Dirección</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-500 tracking-wide">Encargado</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-500 tracking-wide">Contacto / Correo</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-600 tracking-wide">Teléfono</th>
+                <th className="px-6 py-4 text-center font-bold text-gray-600 tracking-wide w-32">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {companies.map((company) => (
+                <tr key={company.id} className="hover:bg-gray-50/80 transition-colors">
+                  <td className="px-6 py-4 font-bold text-gray-800 text-base">{company.nombreEmpresa}</td>
+                  <td className="px-6 py-4 text-gray-600 font-medium">{company.direccion}</td>
+                  <td className="px-6 py-4 text-gray-500">{company.encargado}</td>
+                  <td className="px-6 py-4 text-gray-500 lowercase">{company.correo}</td>
+                  <td className="px-6 py-4 text-gray-600 font-medium">{company.telefono}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex justify-center gap-2">
+                      <button onClick={() => handleEdit(company)} className="p-2 text-gray-400 hover:text-[#C00000] hover:bg-red-50 rounded-lg transition-all">
+                        <PencilIcon className="w-5 h-5" />
+                      </button>
+                      <button onClick={() => handleDelete(company.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                        <TrashIcon className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* COMPONENTE MODAL MODULAR */}
+        <CompanyModal 
+          isOpen={showModal} 
+          onClose={() => setShowModal(false)} 
+          onSave={handleSave}
+          initialData={selectedCompany}
+        />
+      </section>
+    </div>
   );
 };
