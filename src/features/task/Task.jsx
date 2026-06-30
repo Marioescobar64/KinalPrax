@@ -1,26 +1,46 @@
 import { useState } from "react";
-import { PlusIcon, PencilIcon, TrashIcon, CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { TaskModal } from "./TaskModal";
 
 const mockTasks = [
-  { id: 1, title: "Crear sistema de login", assignedTo: "Juan Pérez", dueDate: "2026-05-15", priority: "Alta", status: "En Progreso" },
-  { id: 2, title: "Documentar API", assignedTo: "María García", dueDate: "2026-05-20", priority: "Media", status: "Por Hacer" },
+  { 
+    id: 1, 
+    titulo: "Crear sistema de login", 
+    descripcion: "Desarrollar la interfaz y la integración con el backend usando JWT.",
+    fechaInicio: "2026-05-15", 
+    fechaFin: "2026-05-30",
+    estado: "en progreso",
+    estudiante: "65f1a2b3c4d5e6f7a8b9c111",
+    nombreEstudiante: "Juan Pérez",
+    supervisor: "65f1a2b3c4d5e6f7a8b9c022",
+    nombreSupervisor: "Ing. Carlos López"
+  },
+  { 
+    id: 2, 
+    titulo: "Documentar API", 
+    descripcion: "Redactar los endpoints principales en Postman o Swagger.",
+    fechaInicio: "2026-05-20", 
+    fechaFin: "",
+    estado: "pendiente",
+    estudiante: "65f1a2b3c4d5e6f7a8b9c222",
+    nombreEstudiante: "María García",
+    supervisor: "65f1a2b3c4d5e6f7a8b9c044",
+    nombreSupervisor: "Licda. Marta Rodríguez"
+  },
 ];
 
 export const Task = () => {
   const [tasks, setTasks] = useState(mockTasks);
   const [showModal, setShowModal] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [formData, setFormData] = useState({ title: "", assignedTo: "", dueDate: "", priority: "Media", status: "Por Hacer" });
+  const [selectedTask, setSelectedTask] = useState(null);
 
   const handleAdd = () => {
-    setEditingId(null);
-    setFormData({ title: "", assignedTo: "", dueDate: "", priority: "Media", status: "Por Hacer" });
+    setSelectedTask(null);
     setShowModal(true);
   };
 
   const handleEdit = (task) => {
-    setEditingId(task.id);
-    setFormData(task);
+    setSelectedTask(task);
     setShowModal(true);
   };
 
@@ -30,160 +50,107 @@ export const Task = () => {
     }
   };
 
-  const handleSave = () => {
-    if (editingId) {
-      setTasks(tasks.map(t => t.id === editingId ? { ...formData, id: editingId } : t));
+  const handleSave = (data) => {
+    if (selectedTask) {
+      setTasks(tasks.map(t => t.id === selectedTask.id ? { ...data, id: selectedTask.id } : t));
     } else {
-      setTasks([...tasks, { ...formData, id: Date.now() }]);
+      setTasks([...tasks, { ...data, id: Date.now() }]);
     }
     setShowModal(false);
   };
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case "Alta": return "bg-red-100 text-red-700";
-      case "Media": return "bg-yellow-100 text-yellow-700";
-      case "Baja": return "bg-green-100 text-green-700";
-      default: return "bg-gray-100 text-gray-700";
-    }
-  };
-
   const getStatusColor = (status) => {
     switch (status) {
-      case "Por Hacer": return "bg-gray-100 text-gray-700";
-      case "En Progreso": return "bg-blue-100 text-blue-700";
-      case "Completada": return "bg-green-100 text-green-700";
-      default: return "bg-gray-100 text-gray-700";
+      case "pendiente": return "bg-amber-100 text-amber-800 border border-amber-200";
+      case "en progreso": return "bg-blue-100 text-blue-800 border border-blue-200";
+      case "completada": return "bg-green-100 text-green-800 border border-green-200";
+      default: return "bg-gray-100 text-gray-800 border border-gray-200";
     }
   };
 
   return (
-    <section className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-[#2C1506]">Tareas</h1>
-          <p className="text-sm text-[#2C1506]/80 mt-1">Gestión de tareas de prácticas</p>
-        </div>
-        <button
-          onClick={handleAdd}
-          className="flex items-center gap-2 bg-[#C00000] text-white px-4 py-2 rounded-lg hover:bg-[#A00000] transition"
-        >
-          <PlusIcon className="w-5 h-5" />
-          Nueva Tarea
-        </button>
-      </div>
-
-      <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-[#FFF8F0] border-b border-[#C00000]/20">
-            <tr>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Título</th>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Asignado a</th>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Fecha Límite</th>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Prioridad</th>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Estado</th>
-              <th className="px-6 py-3 text-center font-semibold text-[#2C1506]">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tasks.map((task) => (
-              <tr key={task.id} className="border-b border-[#C00000]/10 hover:bg-[#FFF8F0]/50 transition">
-                <td className="px-6 py-4 text-[#2C1506] font-medium">{task.title}</td>
-                <td className="px-6 py-4 text-[#2C1506]/80">{task.assignedTo}</td>
-                <td className="px-6 py-4 text-[#2C1506]/80">{task.dueDate}</td>
-                <td className="px-6 py-4">
-                  <span className={`px-2 py-1 rounded text-xs font-semibold ${getPriorityColor(task.priority)}`}>
-                    {task.priority}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`px-2 py-1 rounded text-xs font-semibold ${getStatusColor(task.status)}`}>
-                    {task.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 flex justify-center gap-2">
-                  <button
-                    onClick={() => handleEdit(task)}
-                    className="p-2 text-[#C00000] hover:bg-[#C00000]/10 rounded transition"
-                  >
-                    <PencilIcon className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(task.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded transition"
-                  >
-                    <TrashIcon className="w-4 h-4" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {showModal && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 shadow-lg">
-            <h2 className="text-xl font-bold text-[#2C1506] mb-4">
-              {editingId ? "Editar Tarea" : "Nueva Tarea"}
-            </h2>
-            <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Título"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              />
-              <input
-                type="text"
-                placeholder="Asignado a"
-                value={formData.assignedTo}
-                onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              />
-              <input
-                type="date"
-                value={formData.dueDate}
-                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              />
-              <select
-                value={formData.priority}
-                onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              >
-                <option value="Baja">Baja</option>
-                <option value="Media">Media</option>
-                <option value="Alta">Alta</option>
-              </select>
-              <select
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              >
-                <option value="Por Hacer">Por Hacer</option>
-                <option value="En Progreso">En Progreso</option>
-                <option value="Completada">Completada</option>
-              </select>
-            </div>
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={handleSave}
-                className="flex-1 flex items-center justify-center gap-2 bg-[#C00000] text-white py-2 rounded-lg hover:bg-[#A00000] transition"
-              >
-                <CheckIcon className="w-4 h-4" /> Guardar
-              </button>
-              <button
-                onClick={() => setShowModal(false)}
-                className="flex-1 flex items-center justify-center gap-2 bg-gray-300 text-[#2C1506] py-2 rounded-lg hover:bg-gray-400 transition"
-              >
-                <XMarkIcon className="w-4 h-4" /> Cancelar
-              </button>
-            </div>
+    <div className="min-h-screen bg-[#072343] p-8 font-sans">
+      <section className="max-w-7xl mx-auto space-y-8">
+        
+        {/* HEADER */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-extrabold text-[#D97736] tracking-tight">Tareas de Prácticas</h1>
+            <p className="text-sm text-gray-300 mt-1.5">Control, asignaciones cronológicas y estados de las actividades académicas</p>
           </div>
+          <button
+            onClick={handleAdd}
+            className="flex items-center gap-2 bg-[#C00000] text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-black/20 hover:bg-[#A00000] transition-all transform hover:scale-[1.02]"
+          >
+            <PlusIcon className="w-5 h-5 stroke-[2.5]" />
+            Nueva Tarea
+          </button>
         </div>
-      )}
-    </section>
+
+        {/* TABLA DE CONTENIDO */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-x-auto border border-white/10">
+          <table className="w-full text-sm text-[#2C1506]">
+            <thead className="bg-[#FFF8F0] border-b border-gray-100">
+              <tr>
+                <th className="px-6 py-4 text-left font-bold text-gray-700 tracking-wide">Tarea / Descripción</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-700 tracking-wide">Estudiante Asignado</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-700 tracking-wide">Supervisor Responsable</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-700 tracking-wide">Vigencia (Inicio - Fin)</th>
+                <th className="px-6 py-4 text-center font-bold text-gray-700 tracking-wide w-28">Estado</th>
+                <th className="px-6 py-4 text-center font-bold text-gray-600 tracking-wide w-32">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {tasks.map((task) => (
+                <tr key={task.id} className="hover:bg-gray-50/80 transition-colors vertical-align-top">
+                  <td className="px-6 py-4 max-w-xs">
+                    <p className="font-bold text-gray-800 text-base">{task.titulo}</p>
+                    <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">{task.descripcion || "Sin descripción descriptiva"}</p>
+                  </td>
+                  <td className="px-6 py-4 font-medium text-gray-700">
+                    {task.nombreEstudiante || "Estudiante no asociado"}
+                  </td>
+                  <td className="px-6 py-4 font-medium text-gray-600">
+                    {task.nombreSupervisor || "Sin Supervisor asignado"}
+                  </td>
+                  <td className="px-6 py-4 text-xs font-semibold text-gray-600 whitespace-nowrap">
+                    <span className="text-gray-800">{task.fechaInicio}</span> 
+                    {task.fechaFin ? ` al ${task.fechaFin}` : " (Abierta)"}
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <span className={`px-3 py-1 rounded-full font-bold text-xs uppercase tracking-wide ${getStatusColor(task.estado)}`}>
+                      {task.estado}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex justify-center gap-2">
+                      <button 
+                        onClick={() => handleEdit(task)} 
+                        className="p-2 text-gray-400 hover:text-[#C00000] hover:bg-red-50 rounded-lg transition-all"
+                      >
+                        <PencilIcon className="w-5 h-5" />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(task.id)} 
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      >
+                        <TrashIcon className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <TaskModal 
+          isOpen={showModal} 
+          onClose={() => setShowModal(false)} 
+          onSave={handleSave}
+          initialData={selectedTask}
+        />
+      </section>
+    </div>
   );
 };

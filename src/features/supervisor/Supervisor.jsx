@@ -1,158 +1,129 @@
 import { useState } from "react";
-import { PlusIcon, PencilIcon, TrashIcon, CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { SupervisorModal } from "./SupervisorModal";
 
 const mockSupervisors = [
-  { id: 1, firstName: "Dr.", lastName: "López", profession: "Ingeniero", email: "lopez@example.com", phone: "25412345" },
-  { id: 2, firstName: "Ing.", lastName: "Rodríguez", profession: "Especialista", email: "rodriguez@example.com", phone: "78945612" },
+  { 
+    id: 1, 
+    nombre: "Ing. Carlos López", 
+    correo: "lopez@techsolutions.com", 
+    telefono: "+502 2541-2345",
+    empresa: "65f1a2b3c4d5e6f7a8b9c022",
+    nombreEmpresa: "Tech Solutions"
+  },
+  { 
+    id: 2, 
+    nombre: "Licda. Marta Rodríguez", 
+    correo: "marta.rodriguez@constructora.com", 
+    telefono: "+502 7894-5612",
+    empresa: "65f1a2b3c4d5e6f7a8b9c044",
+    nombreEmpresa: "Constructora Moderna"
+  },
 ];
 
 export const Supervisor = () => {
   const [supervisors, setSupervisors] = useState(mockSupervisors);
   const [showModal, setShowModal] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [formData, setFormData] = useState({ firstName: "", lastName: "", profession: "", email: "", phone: "" });
+  const [selectedSupervisor, setSelectedSupervisor] = useState(null);
 
   const handleAdd = () => {
-    setEditingId(null);
-    setFormData({ firstName: "", lastName: "", profession: "", email: "", phone: "" });
+    setSelectedSupervisor(null);
     setShowModal(true);
   };
 
   const handleEdit = (supervisor) => {
-    setEditingId(supervisor.id);
-    setFormData(supervisor);
+    setSelectedSupervisor(supervisor);
     setShowModal(true);
   };
 
   const handleDelete = (id) => {
-    if (confirm("¿Está seguro de que desea eliminar este supervisor?")) {
+    if (confirm("¿Está seguro de que desea eliminar a este supervisor?")) {
       setSupervisors(supervisors.filter(s => s.id !== id));
     }
   };
 
-  const handleSave = () => {
-    if (editingId) {
-      setSupervisors(supervisors.map(s => s.id === editingId ? { ...formData, id: editingId } : s));
+  const handleSave = (data) => {
+    if (selectedSupervisor) {
+      setSupervisors(supervisors.map(s => s.id === selectedSupervisor.id ? { ...data, id: selectedSupervisor.id } : s));
     } else {
-      setSupervisors([...supervisors, { ...formData, id: Date.now() }]);
+      setSupervisors([...supervisors, { ...data, id: Date.now() }]);
     }
     setShowModal(false);
   };
 
   return (
-    <section className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-[#2C1506]">Supervisores</h1>
-          <p className="text-sm text-[#2C1506]/80 mt-1">Gestión de supervisores de prácticas</p>
-        </div>
-        <button
-          onClick={handleAdd}
-          className="flex items-center gap-2 bg-[#C00000] text-white px-4 py-2 rounded-lg hover:bg-[#A00000] transition"
-        >
-          <PlusIcon className="w-5 h-5" />
-          Nuevo Supervisor
-        </button>
-      </div>
-
-      <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-[#FFF8F0] border-b border-[#C00000]/20">
-            <tr>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Nombre</th>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Profesión</th>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Email</th>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Teléfono</th>
-              <th className="px-6 py-3 text-center font-semibold text-[#2C1506]">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {supervisors.map((supervisor) => (
-              <tr key={supervisor.id} className="border-b border-[#C00000]/10 hover:bg-[#FFF8F0]/50 transition">
-                <td className="px-6 py-4 text-[#2C1506] font-medium">{supervisor.firstName} {supervisor.lastName}</td>
-                <td className="px-6 py-4 text-[#2C1506]/80">{supervisor.profession}</td>
-                <td className="px-6 py-4 text-[#2C1506]/80">{supervisor.email}</td>
-                <td className="px-6 py-4 text-[#2C1506]/80">{supervisor.phone}</td>
-                <td className="px-6 py-4 flex justify-center gap-2">
-                  <button
-                    onClick={() => handleEdit(supervisor)}
-                    className="p-2 text-[#C00000] hover:bg-[#C00000]/10 rounded transition"
-                  >
-                    <PencilIcon className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(supervisor.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded transition"
-                  >
-                    <TrashIcon className="w-4 h-4" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {showModal && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 shadow-lg">
-            <h2 className="text-xl font-bold text-[#2C1506] mb-4">
-              {editingId ? "Editar Supervisor" : "Nuevo Supervisor"}
-            </h2>
-            <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Título/Nombre"
-                value={formData.firstName}
-                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              />
-              <input
-                type="text"
-                placeholder="Apellido"
-                value={formData.lastName}
-                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              />
-              <input
-                type="text"
-                placeholder="Profesión"
-                value={formData.profession}
-                onChange={(e) => setFormData({ ...formData, profession: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              />
-              <input
-                type="text"
-                placeholder="Teléfono"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              />
-            </div>
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={handleSave}
-                className="flex-1 flex items-center justify-center gap-2 bg-[#C00000] text-white py-2 rounded-lg hover:bg-[#A00000] transition"
-              >
-                <CheckIcon className="w-4 h-4" /> Guardar
-              </button>
-              <button
-                onClick={() => setShowModal(false)}
-                className="flex-1 flex items-center justify-center gap-2 bg-gray-300 text-[#2C1506] py-2 rounded-lg hover:bg-gray-400 transition"
-              >
-                <XMarkIcon className="w-4 h-4" /> Cancelar
-              </button>
-            </div>
+    <div className="min-h-screen bg-[#072343] p-8 font-sans">
+      <section className="max-w-7xl mx-auto space-y-8">
+        
+        {/* HEADER */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-extrabold text-[#D97736] tracking-tight">Supervisores</h1>
+            <p className="text-sm text-gray-300 mt-1.5">Administración de contactos y enlaces institucionales de las empresas</p>
           </div>
+          <button
+            onClick={handleAdd}
+            className="flex items-center gap-2 bg-[#C00000] text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-black/20 hover:bg-[#A00000] transition-all transform hover:scale-[1.02]"
+          >
+            <PlusIcon className="w-5 h-5 stroke-[2.5]" />
+            Nuevo Supervisor
+          </button>
         </div>
-      )}
-    </section>
+
+        {/* TABLA DE CONTENIDO */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-x-auto border border-white/10">
+          <table className="w-full text-sm text-[#2C1506]">
+            <thead className="bg-[#FFF8F0] border-b border-gray-100">
+              <tr>
+                <th className="px-6 py-4 text-left font-bold text-gray-700 tracking-wide">Nombre Completo</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-700 tracking-wide">Empresa Asignada</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-700 tracking-wide">Correo Electrónico</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-700 tracking-wide">Teléfono de Contacto</th>
+                <th className="px-6 py-4 text-center font-bold text-gray-600 tracking-wide w-32">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {supervisors.map((supervisor) => (
+                <tr key={supervisor.id} className="hover:bg-gray-50/80 transition-colors">
+                  <td className="px-6 py-4 font-bold text-gray-800 text-base">
+                    {supervisor.nombre}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full font-semibold text-xs border border-blue-100">
+                      {supervisor.nombreEmpresa || "Empresa Externa"}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 font-medium text-gray-600 select-all">{supervisor.correo}</td>
+                  <td className="px-6 py-4 font-medium text-gray-600">{supervisor.telefono || "N/A"}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex justify-center gap-2">
+                      <button 
+                        onClick={() => handleEdit(supervisor)} 
+                        className="p-2 text-gray-400 hover:text-[#C00000] hover:bg-red-50 rounded-lg transition-all"
+                      >
+                        <PencilIcon className="w-5 h-5" />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(supervisor.id)} 
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      >
+                        <TrashIcon className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <SupervisorModal 
+          isOpen={showModal} 
+          onClose={() => setShowModal(false)} 
+          onSave={handleSave}
+          initialData={selectedSupervisor}
+        />
+      </section>
+    </div>
   );
 };

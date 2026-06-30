@@ -1,10 +1,32 @@
 import { useState } from "react";
-import { PlusIcon, PencilIcon, TrashIcon, PhotoIcon } from "@heroicons/react/24/outline";
-import { PracticeModal } from "./PracticeModal"; // Asegúrate de importar el modal
+import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { PracticeModal } from "./PracticeModal";
 
 const mockPractices = [
-  { id: 1, title: "Práctica en Desarrollo Web", company: "Tech Solutions", startDate: "2026-04-01", endDate: "2026-06-30", status: "En Curso", image: "https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=150&q=80" },
-  { id: 2, title: "Práctica en Sistemas", company: "Constructora Moderna", startDate: "2026-03-15", endDate: "2026-05-15", status: "Completada", image: "https://images.unsplash.com/photo-1581092921461-eab62e97a780?auto=format&fit=crop&w=150&q=80" },
+  { 
+    id: 1, 
+    estudiante: "65f1a2b3c4d5e6f7a8b9c011", // ID de simulación
+    nombreEstudiante: "Juan Fernando Pérez", 
+    empresa: "65f1a2b3c4d5e6f7a8b9c022", // ID de simulación
+    nombreEmpresa: "Tech Solutions", 
+    fecha: "2026-04-01", 
+    horas: 40, 
+    actividades: "Desarrollo de módulos frontend utilizando React y Tailwind CSS.", 
+    estado: "aprobada",
+    comentarios: "Excelente desempeño en sus entregables."
+  },
+  { 
+    id: 2, 
+    estudiante: "65f1a2b3c4d5e6f7a8b9c033",
+    nombreEstudiante: "María Andre García", 
+    empresa: "65f1a2b3c4d5e6f7a8b9c044",
+    nombreEmpresa: "Constructora Moderna", 
+    fecha: "2026-03-15", 
+    horas: 25, 
+    actividades: "Mantenimiento preventivo de equipo de cómputo y redes locales.", 
+    estado: "pendiente",
+    comentarios: ""
+  },
 ];
 
 export const Practice = () => {
@@ -13,108 +35,114 @@ export const Practice = () => {
   const [selectedPractice, setSelectedPractice] = useState(null);
 
   const handleAdd = () => {
-    setSelectedPractice(null); // Limpiar para nueva práctica
+    setSelectedPractice(null);
     setShowModal(true);
   };
 
   const handleEdit = (practice) => {
-    setSelectedPractice(practice); // Cargar datos de la práctica a editar
+    setSelectedPractice(practice);
     setShowModal(true);
   };
 
   const handleDelete = (id) => {
-    if (confirm("¿Está seguro de que desea eliminar esta práctica?")) {
+    if (confirm("¿Está seguro de que desea eliminar este registro de práctica?")) {
       setPractices(practices.filter(p => p.id !== id));
     }
   };
 
   const handleSave = (data) => {
     if (selectedPractice) {
-      // Editar
       setPractices(practices.map(p => p.id === selectedPractice.id ? { ...data, id: selectedPractice.id } : p));
     } else {
-      // Agregar nuevo
       setPractices([...practices, { ...data, id: Date.now() }]);
     }
     setShowModal(false);
   };
 
+  const getEstadoBadge = (estado) => {
+    const styles = {
+      pendiente: "bg-amber-100 text-amber-700 border-amber-200",
+      aprobada: "bg-green-100 text-green-700 border-green-200",
+      rechazada: "bg-red-100 text-red-700 border-red-200",
+    };
+    return (
+      <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${styles[estado] || "bg-gray-100 text-gray-700"}`}>
+        {estado}
+      </span>
+    );
+  };
+
   return (
-    <section className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-[#2C1506]">Prácticas</h1>
-          <p className="text-sm text-[#2C1506]/80 mt-1">Gestión de prácticas profesionales</p>
+    <div className="min-h-screen bg-[#072343] p-8 font-sans">
+      <section className="max-w-7xl mx-auto space-y-8">
+        
+        {/* HEADER */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-extrabold text-[#D97736] tracking-tight">Prácticas</h1>
+            <p className="text-sm text-gray-300 mt-1.5">Control de horas, actividades y aprobación de prácticas técnico-laborales</p>
+          </div>
+          <button
+            onClick={handleAdd}
+            className="flex items-center gap-2 bg-[#C00000] text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-black/20 hover:bg-[#A00000] transition-all transform scale-[1.02]"
+          >
+            <PlusIcon className="w-5 h-5 stroke-[2.5]" />
+            Nueva Práctica
+          </button>
         </div>
-        <button
-          onClick={handleAdd}
-          className="flex items-center gap-2 bg-[#C00000] text-white px-5 py-2.5 rounded-xl font-medium shadow-md hover:bg-[#A00000] transition-all"
-        >
-          <PlusIcon className="w-5 h-5" />
-          Nueva Práctica
-        </button>
-      </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-[#FFF8F0] border-b border-[#C00000]/10">
-            <tr>
-              <th className="px-6 py-4 text-left font-semibold text-[#e04949] w-24">Imagen</th>
-              <th className="px-6 py-4 text-left font-semibold text-[#2C1506]">Título</th>
-              <th className="px-6 py-4 text-left font-semibold text-[#2C1506]">Empresa</th>
-              <th className="px-6 py-4 text-left font-semibold text-[#2C1506]">Inicio</th>
-              <th className="px-6 py-4 text-left font-semibold text-[#2C1506]">Fin</th>
-              <th className="px-6 py-4 text-left font-semibold text-[#2C1506]">Estado</th>
-              <th className="px-6 py-4 text-center font-semibold text-[#2C1506] w-32">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {practices.map((practice) => (
-              <tr key={practice.id} className="hover:bg-[#FFF8F0]/30 transition-colors">
-                <td className="px-6 py-4">
-                  {practice.image ? (
-                    <img src={practice.image} alt="" className="w-12 h-12 object-cover rounded-xl border border-gray-100 shadow-sm" />
-                  ) : (
-                    <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center border border-dashed border-gray-200">
-                      <PhotoIcon className="w-5 h-5 text-gray-400" />
-                    </div>
-                  )}
-                </td>
-                <td className="px-6 py-4 text-[#2C1506] font-semibold">{practice.title}</td>
-                <td className="px-6 py-4 text-[#2C1506]/80 font-medium">{practice.company}</td>
-                <td className="px-6 py-4 text-gray-500 whitespace-nowrap">{practice.startDate}</td>
-                <td className="px-6 py-4 text-gray-500 whitespace-nowrap">{practice.endDate}</td>
-                <td className="px-6 py-4">
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-semibold inline-block ${
-                    practice.status === "En Curso" ? "bg-blue-50 text-blue-700 border border-blue-100" : 
-                    practice.status === "Completada" ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-amber-50 text-amber-700 border border-amber-100"
-                  }`}>
-                    {practice.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-center">
-                  <div className="flex justify-center gap-1.5">
-                    <button onClick={() => handleEdit(practice)} className="p-2 text-gray-500 hover:text-[#C00000] hover:bg-[#C00000]/5 rounded-xl transition-all">
-                      <PencilIcon className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => handleDelete(practice.id)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
-                      <TrashIcon className="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
+        {/* TABLA */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-x-auto border border-white/10">
+          <table className="w-full text-sm text-[#2C1506]">
+            <thead className="bg-[#FFF8F0] border-b border-gray-100">
+              <tr>
+                <th className="px-6 py-4 text-left font-bold text-gray-700 tracking-wide">Estudiante</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-700 tracking-wide">Empresa</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-600 tracking-wide">Fecha</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-600 tracking-wide">Horas</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-600 tracking-wide">Actividades</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-600 tracking-wide">Estado</th>
+                <th className="px-6 py-4 text-center font-bold text-gray-600 tracking-wide w-32">Acciones</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {practices.map((practice) => (
+                <tr key={practice.id} className="hover:bg-gray-50/80 transition-colors">
+                  <td className="px-6 py-4 font-bold text-gray-800 text-base">
+                    {practice.nombreEstudiante || "Estudiante Vinculado"}
+                  </td>
+                  <td className="px-6 py-4 text-gray-700 font-semibold">
+                    {practice.nombreEmpresa || "Empresa Vinculada"}
+                  </td>
+                  <td className="px-6 py-4 text-gray-500 whitespace-nowrap font-medium">{practice.fecha}</td>
+                  <td className="px-6 py-4 text-[#C00000] font-bold text-base">{practice.horas} hrs</td>
+                  <td className="px-6 py-4 text-gray-500 max-w-xs truncate" title={practice.actividades}>
+                    {practice.actividades}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">{getEstadoBadge(practice.estado)}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex justify-center gap-2">
+                      <button onClick={() => handleEdit(practice)} className="p-2 text-gray-400 hover:text-[#C00000] hover:bg-red-50 rounded-lg transition-all">
+                        <PencilIcon className="w-5 h-5" />
+                      </button>
+                      <button onClick={() => handleDelete(practice.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                        <TrashIcon className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-      {/* Renderizado del Modal */}
-      <PracticeModal 
-        isOpen={showModal} 
-        onClose={() => setShowModal(false)} 
-        onSave={handleSave}
-        initialData={selectedPractice}
-      />
-    </section>
+        <PracticeModal 
+          isOpen={showModal} 
+          onClose={() => setShowModal(false)} 
+          onSave={handleSave}
+          initialData={selectedPractice}
+        />
+      </section>
+    </div>
   );
 };
