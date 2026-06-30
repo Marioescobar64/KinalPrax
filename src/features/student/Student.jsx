@@ -1,26 +1,24 @@
 import { useState } from "react";
-import { PlusIcon, PencilIcon, TrashIcon, CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { StudentModal } from "./StudentModal";
 
 const mockStudents = [
-  { id: 1, firstName: "Juan", lastName: "Pérez", carnet: "E-2024-001", email: "juan.perez@example.com", status: "Activo" },
-  { id: 2, firstName: "María", lastName: "García", carnet: "E-2024-002", email: "maria.garcia@example.com", status: "Activo" },
+  { id: 1, carnet: "2022010", nombre: "Juan Fernando Pérez", carrera: "Informática", telefono: "5544-3322", correo: "juan.perez@kinal.edu.gt", horasRequeridas: 150, horasAcumuladas: 75 },
+  { id: 2, carnet: "2022045", nombre: "María Andre García", carrera: "Electrónica", telefono: "4411-2233", correo: "maria.garcia@kinal.edu.gt", horasRequeridas: 200, horasAcumuladas: 180 },
 ];
 
 export const Student = () => {
   const [students, setStudents] = useState(mockStudents);
   const [showModal, setShowModal] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [formData, setFormData] = useState({ firstName: "", lastName: "", carnet: "", email: "", status: "Activo" });
+  const [selectedStudent, setSelectedStudent] = useState(null);
 
   const handleAdd = () => {
-    setEditingId(null);
-    setFormData({ firstName: "", lastName: "", carnet: "", email: "", status: "Activo" });
+    setSelectedStudent(null);
     setShowModal(true);
   };
 
   const handleEdit = (student) => {
-    setEditingId(student.id);
-    setFormData(student);
+    setSelectedStudent(student);
     setShowModal(true);
   };
 
@@ -30,122 +28,99 @@ export const Student = () => {
     }
   };
 
-  const handleSave = () => {
-    if (editingId) {
-      setStudents(students.map(s => s.id === editingId ? { ...formData, id: editingId } : s));
+  const handleSave = (data) => {
+    if (selectedStudent) {
+      setStudents(students.map(s => s.id === selectedStudent.id ? { ...data, id: selectedStudent.id } : s));
     } else {
-      setStudents([...students, { ...formData, id: Date.now() }]);
+      setStudents([...students, { ...data, id: Date.now() }]);
     }
     setShowModal(false);
   };
 
   return (
-    <section className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-[#2C1506]">Estudiantes</h1>
-          <p className="text-sm text-[#2C1506]/80 mt-1">Gestión de estudiantes en prácticas</p>
-        </div>
-        <button
-          onClick={handleAdd}
-          className="flex items-center gap-2 bg-[#C00000] text-white px-4 py-2 rounded-lg hover:bg-[#A00000] transition"
-        >
-          <PlusIcon className="w-5 h-5" />
-          Nuevo Estudiante
-        </button>
-      </div>
-
-      <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-[#FFF8F0] border-b border-[#C00000]/20">
-            <tr>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Nombre</th>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Carné</th>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Email</th>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Estado</th>
-              <th className="px-6 py-3 text-center font-semibold text-[#2C1506]">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {students.map((student) => (
-              <tr key={student.id} className="border-b border-[#C00000]/10 hover:bg-[#FFF8F0]/50 transition">
-                <td className="px-6 py-4 text-[#2C1506] font-medium">{student.firstName} {student.lastName}</td>
-                <td className="px-6 py-4 text-[#2C1506]/80">{student.carnet}</td>
-                <td className="px-6 py-4 text-[#2C1506]/80">{student.email}</td>
-                <td className="px-6 py-4"><span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-semibold">{student.status}</span></td>
-                <td className="px-6 py-4 flex justify-center gap-2">
-                  <button
-                    onClick={() => handleEdit(student)}
-                    className="p-2 text-[#C00000] hover:bg-[#C00000]/10 rounded transition"
-                  >
-                    <PencilIcon className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(student.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded transition"
-                  >
-                    <TrashIcon className="w-4 h-4" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {showModal && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 shadow-lg">
-            <h2 className="text-xl font-bold text-[#2C1506] mb-4">
-              {editingId ? "Editar Estudiante" : "Nuevo Estudiante"}
-            </h2>
-            <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Nombre"
-                value={formData.firstName}
-                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              />
-              <input
-                type="text"
-                placeholder="Apellido"
-                value={formData.lastName}
-                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              />
-              <input
-                type="text"
-                placeholder="Carné"
-                value={formData.carnet}
-                onChange={(e) => setFormData({ ...formData, carnet: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              />
-            </div>
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={handleSave}
-                className="flex-1 flex items-center justify-center gap-2 bg-[#C00000] text-white py-2 rounded-lg hover:bg-[#A00000] transition"
-              >
-                <CheckIcon className="w-4 h-4" /> Guardar
-              </button>
-              <button
-                onClick={() => setShowModal(false)}
-                className="flex-1 flex items-center justify-center gap-2 bg-gray-300 text-[#2C1506] py-2 rounded-lg hover:bg-gray-400 transition"
-              >
-                <XMarkIcon className="w-4 h-4" /> Cancelar
-              </button>
-            </div>
+    <div className="min-h-screen bg-[#072343] p-8 font-sans">
+      <section className="max-w-7xl mx-auto space-y-8">
+        
+        {/* HEADER */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-extrabold text-[#D97736] tracking-tight">Estudiantes</h1>
+            <p className="text-sm text-gray-300 mt-1.5">Gestión de estudiantes en prácticas técnico-laborales</p>
           </div>
+          <button
+            onClick={handleAdd}
+            className="flex items-center gap-2 bg-[#C00000] text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-black/20 hover:bg-[#A00000] transition-all transform hover:scale-[1.02]"
+          >
+            <PlusIcon className="w-5 h-5 stroke-[2.5]" />
+            Nuevo Estudiante
+          </button>
         </div>
-      )}
-    </section>
+
+        {/* TABLA ADAPTABLE */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-x-auto border border-white/10">
+          <table className="w-full text-sm text-[#2C1506]">
+            <thead className="bg-[#FFF8F0] border-b border-gray-100">
+              <tr>
+                <th className="px-6 py-4 text-left font-bold text-gray-700 tracking-wide">Carné</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-700 tracking-wide">Nombre Completo</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-600 tracking-wide">Carrera</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-500 tracking-wide">Contacto</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-600 tracking-wide">Progreso de Horas</th>
+                <th className="px-6 py-4 text-center font-bold text-gray-600 tracking-wide w-32">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {students.map((student) => {
+                const porcentaje = Math.min(Math.round((student.horasAcumuladas / student.horasRequeridas) * 100), 100) || 0;
+                
+                return (
+                  <tr key={student.id} className="hover:bg-gray-50/80 transition-colors">
+                    <td className="px-6 py-4 font-mono font-bold text-[#C00000] text-sm whitespace-nowrap">{student.carnet}</td>
+                    <td className="px-6 py-4 font-bold text-gray-800 text-base">{student.nombre}</td>
+                    <td className="px-6 py-4 text-gray-600 font-medium">{student.carrera}</td>
+                    <td className="px-6 py-4 text-gray-500 space-y-0.5">
+                      <p className="lowercase text-xs">{student.correo}</p>
+                      <p className="text-gray-400 font-medium text-xs">{student.telefono || "Sin teléfono"}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="w-48 space-y-1">
+                        <div className="flex justify-between text-xs font-bold text-gray-500">
+                          <span>{student.horasAcumuladas} / {student.horasRequeridas} hrs</span>
+                          <span>{porcentaje}%</span>
+                        </div>
+                        <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full transition-all duration-500 ${porcentaje === 100 ? "bg-green-500" : "bg-[#D97736]"}`}
+                            style={{ width: `${porcentaje}%` }}
+                          />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex justify-center gap-2">
+                        <button onClick={() => handleEdit(student)} className="p-2 text-gray-400 hover:text-[#C00000] hover:bg-red-50 rounded-lg transition-all">
+                          <PencilIcon className="w-5 h-5" />
+                        </button>
+                        <button onClick={() => handleDelete(student.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                          <TrashIcon className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* MODAL MODULAR VINCULADO */}
+        <StudentModal 
+          isOpen={showModal} 
+          onClose={() => setShowModal(false)} 
+          onSave={handleSave}
+          initialData={selectedStudent}
+        />
+      </section>
+    </div>
   );
 };

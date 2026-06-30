@@ -3,7 +3,7 @@ import { AuthPage } from "../../features/auth/pages/AuthPage";
 import { DashboardPage } from "../layaouts/DashboardPage";
 import { Company } from "../../features/company/Company.jsx";
 import { Evidence } from "../../features/evidence/Evidence.jsx";
-import { Institud } from "../../features/institud/Institud.jsx";
+import { Institution } from "../../features/institud/Institud.jsx";
 import { Practice } from "../../features/practice/Practice.jsx";
 import { ReposteHours } from "../../features/reposteHoursmodel/ReposteHours.jsx";
 import { Review } from "../../features/review/Review.jsx";
@@ -42,7 +42,7 @@ export const AppRoutes = () => {
         {/* Rutas internas (Paths relativos, sin "/" al inicio) */}
         <Route path="company" element={<Company />} />
         <Route path="evidence" element={<Evidence />} />
-        <Route path="institud" element={<Institud />} />
+      <Route path="institud" element={<Institution />} />
         <Route path="practice" element={<Practice />} />
         
         {/* Ajustado para coincidir con el path del Sidebar que pasaste */}

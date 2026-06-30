@@ -1,26 +1,25 @@
 import { useState } from "react";
-import { PlusIcon, PencilIcon, TrashIcon, CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { UserModal } from "./UserModal";
 
 const mockUsers = [
-  { id: 1, firstName: "Admin", lastName: "Sistema", email: "admin@example.com", role: "ADMIN", status: "Activo" },
-  { id: 2, firstName: "Juan", lastName: "Usuario", email: "user@example.com", role: "USER", status: "Activo" },
+  { id: 1, nombre: "Carlos Mendoza", correo: "cmendoza@kinal.edu.gt", rol: "coordinador", estado: true },
+  { id: 2, nombre: "Estuardo López", correo: "elopez@kinal.edu.gt", rol: "supervisor", estado: true },
+  { id: 3, nombre: "Mario Escobar", correo: "estudiante@kinal.edu.gt", rol: "estudiante", estado: false },
 ];
 
 export const User = () => {
   const [users, setUsers] = useState(mockUsers);
   const [showModal, setShowModal] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [formData, setFormData] = useState({ firstName: "", lastName: "", email: "", role: "USER", status: "Activo" });
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const handleAdd = () => {
-    setEditingId(null);
-    setFormData({ firstName: "", lastName: "", email: "", role: "USER", status: "Activo" });
+    setSelectedUser(null);
     setShowModal(true);
   };
 
   const handleEdit = (user) => {
-    setEditingId(user.id);
-    setFormData(user);
+    setSelectedUser(user);
     setShowModal(true);
   };
 
@@ -30,123 +29,101 @@ export const User = () => {
     }
   };
 
-  const handleSave = () => {
-    if (editingId) {
-      setUsers(users.map(u => u.id === editingId ? { ...formData, id: editingId } : u));
+  const handleSave = (data) => {
+    if (selectedUser) {
+      setUsers(users.map(u => u.id === selectedUser.id ? { ...data, id: selectedUser.id } : u));
     } else {
-      setUsers([...users, { ...formData, id: Date.now() }]);
+      setUsers([...users, { ...data, id: Date.now() }]);
     }
     setShowModal(false);
   };
 
+  // Helper para pintar badges estilizados por cada rol
+  const getRolBadge = (rol) => {
+    const styles = {
+      coordinador: "bg-purple-100 text-purple-700 border-purple-200",
+      supervisor: "bg-blue-100 text-blue-700 border-blue-200",
+      estudiante: "bg-orange-100 text-orange-700 border-orange-200",
+    };
+    return (
+      <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${styles[rol] || "bg-gray-100 text-gray-700"}`}>
+        {rol}
+      </span>
+    );
+  };
+
   return (
-    <section className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-[#2C1506]">Usuarios</h1>
-          <p className="text-sm text-[#2C1506]/80 mt-1">Gestión de usuarios del sistema</p>
-        </div>
-        <button
-          onClick={handleAdd}
-          className="flex items-center gap-2 bg-[#C00000] text-white px-4 py-2 rounded-lg hover:bg-[#A00000] transition"
-        >
-          <PlusIcon className="w-5 h-5" />
-          Nuevo Usuario
-        </button>
-      </div>
-
-      <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-[#FFF8F0] border-b border-[#C00000]/20">
-            <tr>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Nombre</th>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Email</th>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Rol</th>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Estado</th>
-              <th className="px-6 py-3 text-center font-semibold text-[#2C1506]">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id} className="border-b border-[#C00000]/10 hover:bg-[#FFF8F0]/50 transition">
-                <td className="px-6 py-4 text-[#2C1506] font-medium">{user.firstName} {user.lastName}</td>
-                <td className="px-6 py-4 text-[#2C1506]/80">{user.email}</td>
-                <td className="px-6 py-4"><span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-semibold">{user.role}</span></td>
-                <td className="px-6 py-4"><span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-semibold">{user.status}</span></td>
-                <td className="px-6 py-4 flex justify-center gap-2">
-                  <button
-                    onClick={() => handleEdit(user)}
-                    className="p-2 text-[#C00000] hover:bg-[#C00000]/10 rounded transition"
-                  >
-                    <PencilIcon className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(user.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded transition"
-                  >
-                    <TrashIcon className="w-4 h-4" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {showModal && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 shadow-lg">
-            <h2 className="text-xl font-bold text-[#2C1506] mb-4">
-              {editingId ? "Editar Usuario" : "Nuevo Usuario"}
-            </h2>
-            <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Nombre"
-                value={formData.firstName}
-                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              />
-              <input
-                type="text"
-                placeholder="Apellido"
-                value={formData.lastName}
-                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              />
-              <select
-                value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              >
-                <option value="USER">Usuario</option>
-                <option value="ADMIN">Administrador</option>
-              </select>
-            </div>
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={handleSave}
-                className="flex-1 flex items-center justify-center gap-2 bg-[#C00000] text-white py-2 rounded-lg hover:bg-[#A00000] transition"
-              >
-                <CheckIcon className="w-4 h-4" /> Guardar
-              </button>
-              <button
-                onClick={() => setShowModal(false)}
-                className="flex-1 flex items-center justify-center gap-2 bg-gray-300 text-[#2C1506] py-2 rounded-lg hover:bg-gray-400 transition"
-              >
-                <XMarkIcon className="w-4 h-4" /> Cancelar
-              </button>
-            </div>
+    <div className="min-h-screen bg-[#072343] p-8 font-sans">
+      <section className="max-w-7xl mx-auto space-y-8">
+        
+        {/* HEADER */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-extrabold text-[#D97736] tracking-tight">Usuarios</h1>
+            <p className="text-sm text-gray-300 mt-1.5">Gestión de credenciales y roles de acceso al sistema</p>
           </div>
+          <button
+            onClick={handleAdd}
+            className="flex items-center gap-2 bg-[#C00000] text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-black/20 hover:bg-[#A00000] transition-all transform hover:scale-[1.02]"
+          >
+            <PlusIcon className="w-5 h-5 stroke-[2.5]" />
+            Nuevo Usuario
+          </button>
         </div>
-      )}
-    </section>
+
+        {/* TABLA ADAPTABLE */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-x-auto border border-white/10">
+          <table className="w-full text-sm text-[#2C1506]">
+            <thead className="bg-[#FFF8F0] border-b border-gray-100">
+              <tr>
+                <th className="px-6 py-4 text-left font-bold text-gray-700 tracking-wide">Nombre Completo</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-700 tracking-wide">Correo Electrónico</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-600 tracking-wide">Rol Asignado</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-600 tracking-wide">Estado</th>
+                <th className="px-6 py-4 text-center font-bold text-gray-600 tracking-wide w-32">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {users.map((user) => (
+                <tr key={user.id} className="hover:bg-gray-50/80 transition-colors">
+                  <td className="px-6 py-4 font-bold text-gray-800 text-base">{user.nombre}</td>
+                  <td className="px-6 py-4 text-gray-600 font-medium lowercase">{user.correo}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{getRolBadge(user.rol)}</td>
+                  <td className="px-6 py-4">
+                    {user.estado ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Activo
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> Inactivo
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex justify-center gap-2">
+                      <button onClick={() => handleEdit(user)} className="p-2 text-gray-400 hover:text-[#C00000] hover:bg-red-50 rounded-lg transition-all">
+                        <PencilIcon className="w-5 h-5" />
+                      </button>
+                      <button onClick={() => handleDelete(user.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                        <TrashIcon className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* COMPONENTE MODAL MODULAR */}
+        <UserModal 
+          isOpen={showModal} 
+          onClose={() => setShowModal(false)} 
+          onSave={handleSave}
+          initialData={selectedUser}
+        />
+      </section>
+    </div>
   );
 };
