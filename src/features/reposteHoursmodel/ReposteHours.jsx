@@ -1,30 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PlusIcon, PencilIcon, TrashIcon, ClockIcon } from "@heroicons/react/24/outline";
 import { ReposteHoursModal } from "./ReposteHoursModal.jsx";
-
-const mockProgress = [
-  { 
-    id: 1, 
-    estudiante: "65f1a2b3c4d5e6f7a8b9c011", 
-    nombreEstudiante: "Juan Pérez", 
-    horasTotales: 150, 
-    horasAprobadas: 120, 
-    horasPendientes: 30 
-  },
-  { 
-    id: 2, 
-    estudiante: "65f1a2b3c4d5e6f7a8b9c033", 
-    nombreEstudiante: "María García", 
-    horasTotales: 150, 
-    horasAprobadas: 90, 
-    horasPendientes: 60 
-  },
-];
+import { useAdminStore } from "../../shared/store/adminStore";
 
 export const ReposteHours = () => {
-  const [progressList, setProgressList] = useState(mockProgress);
+  const { progressRecords, getProgressRecords, createProgressRecord, updateProgressRecord, deleteProgressRecord } = useAdminStore();
   const [showModal, setShowModal] = useState(false);
   const [selectedProgress, setSelectedProgress] = useState(null);
+
+  useEffect(() => {
+    getProgressRecords();
+  }, [getProgressRecords]);
 
   const handleAdd = () => {
     setSelectedProgress(null);
@@ -36,25 +22,40 @@ export const ReposteHours = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm("¿Está seguro de que desea eliminar el registro de progreso de este estudiante?")) {
-      setProgressList(progressList.filter(p => p.id !== id));
+      try {
+        await deleteProgressRecord(id);
+      } catch (error) {
+        alert(error.message);
+      }
     }
   };
 
-  const handleSave = (data) => {
-    if (selectedProgress) {
-      setProgressList(progressList.map(p => p.id === selectedProgress.id ? { ...data, id: selectedProgress.id } : p));
-    } else {
-      setProgressList([...progressList, { ...data, id: Date.now() }]);
+  const handleSave = async (data) => {
+    try {
+      const payload = {
+        estudiante: data.estudiante,
+        horasTotales: Number(data.horasTotales),
+        horasAprobadas: Number(data.horasAprobadas),
+        horasPendientes: Number(data.horasPendientes)
+      };
+
+      if (selectedProgress) {
+        await updateProgressRecord(selectedProgress._id, payload);
+      } else {
+        await createProgressRecord(payload);
+      }
+      setShowModal(false);
+    } catch (error) {
+      alert(error.message);
     }
-    setShowModal(false);
   };
 
   // Cálculos globales para las tarjetas informativas superiores
-  const globalTotales = progressList.reduce((sum, p) => sum + p.horasTotales, 0);
-  const globalAprobadas = progressList.reduce((sum, p) => sum + p.horasAprobadas, 0);
-  const globalPendientes = progressList.reduce((sum, p) => sum + p.horasPendientes, 0);
+  const globalTotales = progressRecords.reduce((sum, p) => sum + (p.horasTotales || 0), 0);
+  const globalAprobadas = progressRecords.reduce((sum, p) => sum + (p.horasAprobadas || 0), 0);
+  const globalPendientes = progressRecords.reduce((sum, p) => sum + (p.horasPendientes || 0), 0);
 
   return (
     <div className="min-h-screen bg-[#072343] p-8 font-sans">
@@ -120,12 +121,12 @@ export const ReposteHours = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {progressList.map((progress) => {
+              {progressRecords.map((progress) => {
                 const porcentaje = Math.min(Math.round((progress.horasAprobadas / progress.horasTotales) * 100), 100) || 0;
                 return (
-                  <tr key={progress.id} className="hover:bg-gray-50/80 transition-colors">
+                  <tr key={progress._id} className="hover:bg-gray-50/80 transition-colors">
                     <td className="px-6 py-4 font-bold text-gray-800 text-base">
-                      {progress.nombreEstudiante || "Estudiante Vinculado"}
+                      {progress.estudiante?.nombre || progress.nombreEstudiante || "Estudiante Vinculado"}
                     </td>
                     <td className="px-6 py-4 font-semibold text-gray-600">{progress.horasTotales} hrs</td>
                     <td className="px-6 py-4 font-bold text-green-600 text-base">{progress.horasAprobadas} hrs</td>
@@ -143,7 +144,7 @@ export const ReposteHours = () => {
                         <button onClick={() => handleEdit(progress)} className="p-2 text-gray-400 hover:text-[#C00000] hover:bg-red-50 rounded-lg transition-all">
                           <PencilIcon className="w-5 h-5" />
                         </button>
-                        <button onClick={() => handleDelete(progress.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                        <button onClick={() => handleDelete(progress._id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
                           <TrashIcon className="w-5 h-5" />
                         </button>
                       </div>

@@ -1,17 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { UserModal } from "./UserModal";
-
-const mockUsers = [
-  { id: 1, nombre: "Carlos Mendoza", correo: "cmendoza@kinal.edu.gt", rol: "coordinador", estado: true },
-  { id: 2, nombre: "Estuardo López", correo: "elopez@kinal.edu.gt", rol: "supervisor", estado: true },
-  { id: 3, nombre: "Mario Escobar", correo: "estudiante@kinal.edu.gt", rol: "estudiante", estado: false },
-];
+import { useAdminStore } from "../../shared/store/adminStore";
 
 export const User = () => {
-  const [users, setUsers] = useState(mockUsers);
+  const { users, getUsers, createUser, updateUser, deleteUser } = useAdminStore();
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+
+  useEffect(() => {
+    getUsers();
+  }, [getUsers]);
 
   const handleAdd = () => {
     setSelectedUser(null);
@@ -23,19 +22,27 @@ export const User = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm("¿Está seguro de que desea eliminar este usuario?")) {
-      setUsers(users.filter(u => u.id !== id));
+      try {
+        await deleteUser(id);
+      } catch (error) {
+        alert(error.message);
+      }
     }
   };
 
-  const handleSave = (data) => {
-    if (selectedUser) {
-      setUsers(users.map(u => u.id === selectedUser.id ? { ...data, id: selectedUser.id } : u));
-    } else {
-      setUsers([...users, { ...data, id: Date.now() }]);
+  const handleSave = async (data) => {
+    try {
+      if (selectedUser) {
+        await updateUser(selectedUser._id, data);
+      } else {
+        await createUser(data);
+      }
+      setShowModal(false);
+    } catch (error) {
+      alert(error.message);
     }
-    setShowModal(false);
   };
 
   // Helper para pintar badges estilizados por cada rol
@@ -84,8 +91,8 @@ export const User = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {users.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50/80 transition-colors">
+              {users?.map((user) => (
+                <tr key={user._id} className="hover:bg-gray-50/80 transition-colors">
                   <td className="px-6 py-4 font-bold text-gray-800 text-base">{user.nombre}</td>
                   <td className="px-6 py-4 text-gray-600 font-medium lowercase">{user.correo}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{getRolBadge(user.rol)}</td>
@@ -105,7 +112,7 @@ export const User = () => {
                       <button onClick={() => handleEdit(user)} className="p-2 text-gray-400 hover:text-[#C00000] hover:bg-red-50 rounded-lg transition-all">
                         <PencilIcon className="w-5 h-5" />
                       </button>
-                      <button onClick={() => handleDelete(user.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                      <button onClick={() => handleDelete(user._id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
                         <TrashIcon className="w-5 h-5" />
                       </button>
                     </div>

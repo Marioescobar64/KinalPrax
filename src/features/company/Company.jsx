@@ -1,16 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { CompanyModal } from "./CompanyModal";
-
-const mockCompanies = [
-  { id: 1, nombreEmpresa: "Tech Solutions S.A.", direccion: "Av. Las Américas 12-30", encargado: "Tecnología", correo: "contacto@techsolutions.com", telefono: "25412345" },
-  { id: 2, nombreEmpresa: "Constructora Moderna", direccion: "Calzada Roosevelt 4-50", encargado: "Construcción", correo: "info@constructora.com", telefono: "78945612" },
-];
+import { useAdminStore } from "../../shared/store/adminStore";
 
 export const Company = () => {
-  const [companies, setCompanies] = useState(mockCompanies);
+  const { companies, getCompanies, createCompany, updateCompany, deleteCompany } = useAdminStore();
   const [showModal, setShowModal] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState(null);
+
+  useEffect(() => {
+    getCompanies();
+  }, [getCompanies]);
 
   const handleAdd = () => {
     setSelectedCompany(null);
@@ -22,19 +22,27 @@ export const Company = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm("¿Está seguro de que desea eliminar esta empresa?")) {
-      setCompanies(companies.filter(c => c.id !== id));
+      try {
+        await deleteCompany(id);
+      } catch (error) {
+        alert(error.message);
+      }
     }
   };
 
-  const handleSave = (data) => {
-    if (selectedCompany) {
-      setCompanies(companies.map(c => c.id === selectedCompany.id ? { ...data, id: selectedCompany.id } : c));
-    } else {
-      setCompanies([...companies, { ...data, id: Date.now() }]);
+  const handleSave = async (data) => {
+    try {
+      if (selectedCompany) {
+        await updateCompany(selectedCompany._id, data);
+      } else {
+        await createCompany(data);
+      }
+      setShowModal(false);
+    } catch (error) {
+      alert(error.message);
     }
-    setShowModal(false);
   };
 
   return (
@@ -71,7 +79,7 @@ export const Company = () => {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {companies.map((company) => (
-                <tr key={company.id} className="hover:bg-gray-50/80 transition-colors">
+                <tr key={company._id} className="hover:bg-gray-50/80 transition-colors">
                   <td className="px-6 py-4 font-bold text-gray-800 text-base">{company.nombreEmpresa}</td>
                   <td className="px-6 py-4 text-gray-600 font-medium">{company.direccion}</td>
                   <td className="px-6 py-4 text-gray-500">{company.encargado}</td>
@@ -82,7 +90,7 @@ export const Company = () => {
                       <button onClick={() => handleEdit(company)} className="p-2 text-gray-400 hover:text-[#C00000] hover:bg-red-50 rounded-lg transition-all">
                         <PencilIcon className="w-5 h-5" />
                       </button>
-                      <button onClick={() => handleDelete(company.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                      <button onClick={() => handleDelete(company._id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
                         <TrashIcon className="w-5 h-5" />
                       </button>
                     </div>

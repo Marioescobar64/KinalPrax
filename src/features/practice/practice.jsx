@@ -1,38 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { PracticeModal } from "./PracticeModal";
-
-const mockPractices = [
-  { 
-    id: 1, 
-    estudiante: "65f1a2b3c4d5e6f7a8b9c011", // ID de simulación
-    nombreEstudiante: "Juan Fernando Pérez", 
-    empresa: "65f1a2b3c4d5e6f7a8b9c022", // ID de simulación
-    nombreEmpresa: "Tech Solutions", 
-    fecha: "2026-04-01", 
-    horas: 40, 
-    actividades: "Desarrollo de módulos frontend utilizando React y Tailwind CSS.", 
-    estado: "aprobada",
-    comentarios: "Excelente desempeño en sus entregables."
-  },
-  { 
-    id: 2, 
-    estudiante: "65f1a2b3c4d5e6f7a8b9c033",
-    nombreEstudiante: "María Andre García", 
-    empresa: "65f1a2b3c4d5e6f7a8b9c044",
-    nombreEmpresa: "Constructora Moderna", 
-    fecha: "2026-03-15", 
-    horas: 25, 
-    actividades: "Mantenimiento preventivo de equipo de cómputo y redes locales.", 
-    estado: "pendiente",
-    comentarios: ""
-  },
-];
+import { useAdminStore } from "../../shared/store/adminStore";
 
 export const Practice = () => {
-  const [practices, setPractices] = useState(mockPractices);
+  const { practices, getPractices, createPractice, updatePractice, deletePractice } = useAdminStore();
   const [showModal, setShowModal] = useState(false);
   const [selectedPractice, setSelectedPractice] = useState(null);
+
+  useEffect(() => {
+    getPractices();
+  }, [getPractices]);
 
   const handleAdd = () => {
     setSelectedPractice(null);
@@ -44,19 +22,37 @@ export const Practice = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm("¿Está seguro de que desea eliminar este registro de práctica?")) {
-      setPractices(practices.filter(p => p.id !== id));
+      try {
+        await deletePractice(id);
+      } catch (error) {
+        alert(error.message);
+      }
     }
   };
 
-  const handleSave = (data) => {
-    if (selectedPractice) {
-      setPractices(practices.map(p => p.id === selectedPractice.id ? { ...data, id: selectedPractice.id } : p));
-    } else {
-      setPractices([...practices, { ...data, id: Date.now() }]);
+  const handleSave = async (data) => {
+    try {
+      const payload = {
+        estudiante: data.estudiante,
+        empresa: data.empresa,
+        fecha: data.fecha,
+        horas: Number(data.horas),
+        actividades: data.actividades,
+        estado: data.estado,
+        comentarios: data.comentarios
+      };
+
+      if (selectedPractice) {
+        await updatePractice(selectedPractice._id, payload);
+      } else {
+        await createPractice(payload);
+      }
+      setShowModal(false);
+    } catch (error) {
+      alert(error.message);
     }
-    setShowModal(false);
   };
 
   const getEstadoBadge = (estado) => {
@@ -107,14 +103,16 @@ export const Practice = () => {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {practices.map((practice) => (
-                <tr key={practice.id} className="hover:bg-gray-50/80 transition-colors">
+                <tr key={practice._id} className="hover:bg-gray-50/80 transition-colors">
                   <td className="px-6 py-4 font-bold text-gray-800 text-base">
-                    {practice.nombreEstudiante || "Estudiante Vinculado"}
+                    {practice.estudiante?.nombre || practice.nombreEstudiante || "Estudiante Vinculado"}
                   </td>
                   <td className="px-6 py-4 text-gray-700 font-semibold">
-                    {practice.nombreEmpresa || "Empresa Vinculada"}
+                    {practice.empresa?.nombreEmpresa || practice.nombreEmpresa || "Empresa Vinculada"}
                   </td>
-                  <td className="px-6 py-4 text-gray-500 whitespace-nowrap font-medium">{practice.fecha}</td>
+                  <td className="px-6 py-4 text-gray-500 whitespace-nowrap font-medium">
+                    {practice.fecha ? practice.fecha.split("T")[0] : ""}
+                  </td>
                   <td className="px-6 py-4 text-[#C00000] font-bold text-base">{practice.horas} hrs</td>
                   <td className="px-6 py-4 text-gray-500 max-w-xs truncate" title={practice.actividades}>
                     {practice.actividades}
@@ -125,7 +123,7 @@ export const Practice = () => {
                       <button onClick={() => handleEdit(practice)} className="p-2 text-gray-400 hover:text-[#C00000] hover:bg-red-50 rounded-lg transition-all">
                         <PencilIcon className="w-5 h-5" />
                       </button>
-                      <button onClick={() => handleDelete(practice.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                      <button onClick={() => handleDelete(practice._id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
                         <TrashIcon className="w-5 h-5" />
                       </button>
                     </div>

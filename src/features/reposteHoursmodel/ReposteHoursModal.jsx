@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { XMarkIcon, CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+import { useAdminStore } from "../../shared/store/adminStore";
 
 export const ReposteHoursModal = ({ isOpen, onClose, onSave, initialData }) => {
+  const { students, getStudents } = useAdminStore();
   const [formData, setFormData] = useState({
     estudiante: "",
     horasTotales: "",
@@ -12,8 +14,19 @@ export const ReposteHoursModal = ({ isOpen, onClose, onSave, initialData }) => {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (isOpen) {
+      getStudents();
+    }
+  }, [isOpen, getStudents]);
+
+  useEffect(() => {
     if (initialData) {
-      setFormData(initialData);
+      setFormData({
+        estudiante: typeof initialData.estudiante === "object" ? initialData.estudiante?._id : (initialData.estudiante || ""),
+        horasTotales: initialData.horasTotales || 0,
+        horasAprobadas: initialData.horasAprobadas || 0,
+        horasPendientes: initialData.horasPendientes || 0
+      });
     } else {
       setFormData({
         estudiante: "",
@@ -90,14 +103,16 @@ export const ReposteHoursModal = ({ isOpen, onClose, onSave, initialData }) => {
                 value={formData.estudiante}
                 onChange={(e) => setFormData({ 
                   ...formData, 
-                  estudiante: e.target.value, 
-                  nombreEstudiante: e.target.options[e.target.selectedIndex].text 
+                  estudiante: e.target.value
                 })}
                 className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl focus:ring-4 focus:ring-[#C00000]/5 focus:border-[#C00000] outline-none transition text-sm text-gray-800 bg-white disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
               >
                 <option value="" disabled>-- Seleccione el estudiante --</option>
-                <option value="65f1a2b3c4d5e6f7a8b9c011">Juan Pérez</option>
-                <option value="65f1a2b3c4d5e6f7a8b9c033">María García</option>
+                {students.map((s) => (
+                  <option key={s._id} value={s._id}>
+                    {s.nombre} ({s.carnet})
+                  </option>
+                ))}
               </select>
             </div>
 

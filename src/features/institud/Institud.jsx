@@ -1,16 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { InstitutionModal } from "./InstitudModal";
-
-const mockInstitutions = [
-  { id: 1, nombre: "Universidad Estatal", direccion: "Calle Principal 123, San Salvador", telefono: "2233-4455" },
-  { id: 2, nombre: "Universidad Privada", direccion: "Avenida Central 456, San Salvador", telefono: "2266-7788" },
-];
+import { useAdminStore } from "../../shared/store/adminStore";
 
 export const Institution = () => {
-  const [institutions, setInstitutions] = useState(mockInstitutions);
+  const { institutions, getInstitutions, createInstitution, updateInstitution, deleteInstitution } = useAdminStore();
   const [showModal, setShowModal] = useState(false);
   const [selectedInstitution, setSelectedInstitution] = useState(null);
+
+  useEffect(() => {
+    getInstitutions();
+  }, [getInstitutions]);
 
   const handleAdd = () => {
     setSelectedInstitution(null);
@@ -22,19 +22,27 @@ export const Institution = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm("¿Está seguro de que desea eliminar esta institución?")) {
-      setInstitutions(institutions.filter(i => i.id !== id));
+      try {
+        await deleteInstitution(id);
+      } catch (error) {
+        alert(error.message);
+      }
     }
   };
 
-  const handleSave = (data) => {
-    if (selectedInstitution) {
-      setInstitutions(institutions.map(i => i.id === selectedInstitution.id ? { ...data, id: selectedInstitution.id } : i));
-    } else {
-      setInstitutions([...institutions, { ...data, id: Date.now() }]);
+  const handleSave = async (data) => {
+    try {
+      if (selectedInstitution) {
+        await updateInstitution(selectedInstitution._id, data);
+      } else {
+        await createInstitution(data);
+      }
+      setShowModal(false);
+    } catch (error) {
+      alert(error.message);
     }
-    setShowModal(false);
   };
 
   return (
@@ -69,7 +77,7 @@ export const Institution = () => {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {institutions.map((institution) => (
-                <tr key={institution.id} className="hover:bg-gray-50/80 transition-colors">
+                <tr key={institution._id} className="hover:bg-gray-50/80 transition-colors">
                   <td className="px-6 py-4 font-bold text-gray-800 text-base">{institution.nombre}</td>
                   <td className="px-6 py-4 text-gray-600 font-medium">{institution.direccion}</td>
                   <td className="px-6 py-4 text-gray-500 whitespace-nowrap">{institution.telefono || "N/A"}</td>
@@ -78,7 +86,7 @@ export const Institution = () => {
                       <button onClick={() => handleEdit(institution)} className="p-2 text-gray-400 hover:text-[#C00000] hover:bg-red-50 rounded-lg transition-all">
                         <PencilIcon className="w-5 h-5" />
                       </button>
-                      <button onClick={() => handleDelete(institution.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                      <button onClick={() => handleDelete(institution._id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
                         <TrashIcon className="w-5 h-5" />
                       </button>
                     </div>

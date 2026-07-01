@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { XMarkIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { useAdminStore } from "../../shared/store/adminStore";
 
 export const SupervisorModal = ({ isOpen, onClose, onSave, initialData }) => {
+  const { companies, getCompanies } = useAdminStore();
   const [formData, setFormData] = useState({
     nombre: "",
     correo: "",
@@ -10,8 +12,19 @@ export const SupervisorModal = ({ isOpen, onClose, onSave, initialData }) => {
   });
 
   useEffect(() => {
+    if (isOpen) {
+      getCompanies();
+    }
+  }, [isOpen, getCompanies]);
+
+  useEffect(() => {
     if (initialData) {
-      setFormData(initialData);
+      setFormData({
+        nombre: initialData.nombre || "",
+        correo: initialData.correo || "",
+        telefono: initialData.telefono || "",
+        empresa: typeof initialData.empresa === "object" ? initialData.empresa?._id : (initialData.empresa || "")
+      });
     } else {
       setFormData({
         nombre: "",
@@ -100,14 +113,16 @@ export const SupervisorModal = ({ isOpen, onClose, onSave, initialData }) => {
                 value={formData.empresa}
                 onChange={(e) => setFormData({ 
                   ...formData, 
-                  empresa: e.target.value, 
-                  nombreEmpresa: e.target.options[e.target.selectedIndex].text 
+                  empresa: e.target.value
                 })}
                 className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl focus:ring-4 focus:ring-[#C00000]/5 focus:border-[#C00000] outline-none transition text-sm text-gray-800 bg-white cursor-pointer"
               >
                 <option value="" disabled>-- Seleccione la empresa de origen --</option>
-                <option value="65f1a2b3c4d5e6f7a8b9c022">Tech Solutions</option>
-                <option value="65f1a2b3c4d5e6f7a8b9c044">Constructora Moderna</option>
+                {companies.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    {c.nombreEmpresa}
+                  </option>
+                ))}
               </select>
             </div>
 

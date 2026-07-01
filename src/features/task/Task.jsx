@@ -1,38 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { TaskModal } from "./TaskModal";
-
-const mockTasks = [
-  { 
-    id: 1, 
-    titulo: "Crear sistema de login", 
-    descripcion: "Desarrollar la interfaz y la integración con el backend usando JWT.",
-    fechaInicio: "2026-05-15", 
-    fechaFin: "2026-05-30",
-    estado: "en progreso",
-    estudiante: "65f1a2b3c4d5e6f7a8b9c111",
-    nombreEstudiante: "Juan Pérez",
-    supervisor: "65f1a2b3c4d5e6f7a8b9c022",
-    nombreSupervisor: "Ing. Carlos López"
-  },
-  { 
-    id: 2, 
-    titulo: "Documentar API", 
-    descripcion: "Redactar los endpoints principales en Postman o Swagger.",
-    fechaInicio: "2026-05-20", 
-    fechaFin: "",
-    estado: "pendiente",
-    estudiante: "65f1a2b3c4d5e6f7a8b9c222",
-    nombreEstudiante: "María García",
-    supervisor: "65f1a2b3c4d5e6f7a8b9c044",
-    nombreSupervisor: "Licda. Marta Rodríguez"
-  },
-];
+import { useAdminStore } from "../../shared/store/adminStore";
 
 export const Task = () => {
-  const [tasks, setTasks] = useState(mockTasks);
+  const { tasks, getTasks, createTask, updateTask, deleteTask } = useAdminStore();
   const [showModal, setShowModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
+
+  useEffect(() => {
+    getTasks();
+  }, [getTasks]);
 
   const handleAdd = () => {
     setSelectedTask(null);
@@ -44,19 +22,37 @@ export const Task = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm("¿Está seguro de que desea eliminar esta tarea?")) {
-      setTasks(tasks.filter(t => t.id !== id));
+      try {
+        await deleteTask(id);
+      } catch (error) {
+        alert(error.message);
+      }
     }
   };
 
-  const handleSave = (data) => {
-    if (selectedTask) {
-      setTasks(tasks.map(t => t.id === selectedTask.id ? { ...data, id: selectedTask.id } : t));
-    } else {
-      setTasks([...tasks, { ...data, id: Date.now() }]);
+  const handleSave = async (data) => {
+    try {
+      const payload = {
+        titulo: data.titulo,
+        descripcion: data.descripcion,
+        fechaInicio: data.fechaInicio,
+        fechaFin: data.fechaFin || undefined,
+        estado: data.estado,
+        estudiante: data.estudiante,
+        supervisor: data.supervisor
+      };
+
+      if (selectedTask) {
+        await updateTask(selectedTask._id, payload);
+      } else {
+        await createTask(payload);
+      }
+      setShowModal(false);
+    } catch (error) {
+      alert(error.message);
     }
-    setShowModal(false);
   };
 
   const getStatusColor = (status) => {
@@ -102,20 +98,20 @@ export const Task = () => {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {tasks.map((task) => (
-                <tr key={task.id} className="hover:bg-gray-50/80 transition-colors vertical-align-top">
+                <tr key={task._id} className="hover:bg-gray-50/80 transition-colors vertical-align-top">
                   <td className="px-6 py-4 max-w-xs">
                     <p className="font-bold text-gray-800 text-base">{task.titulo}</p>
-                    <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">{task.descripcion || "Sin descripción descriptiva"}</p>
+                    <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">{task.descripcion || "Sin descripción"}</p>
                   </td>
                   <td className="px-6 py-4 font-medium text-gray-700">
-                    {task.nombreEstudiante || "Estudiante no asociado"}
+                    {task.estudiante?.nombre || task.nombreEstudiante || "Estudiante no asociado"}
                   </td>
                   <td className="px-6 py-4 font-medium text-gray-600">
-                    {task.nombreSupervisor || "Sin Supervisor asignado"}
+                    {task.supervisor?.nombre || task.nombreSupervisor || "Sin Supervisor asignado"}
                   </td>
                   <td className="px-6 py-4 text-xs font-semibold text-gray-600 whitespace-nowrap">
-                    <span className="text-gray-800">{task.fechaInicio}</span> 
-                    {task.fechaFin ? ` al ${task.fechaFin}` : " (Abierta)"}
+                    <span className="text-gray-800">{task.fechaInicio ? task.fechaInicio.split("T")[0] : ""}</span> 
+                    {task.fechaFin ? ` al ${task.fechaFin.split("T")[0]}` : " (Abierta)"}
                   </td>
                   <td className="px-6 py-4 text-center">
                     <span className={`px-3 py-1 rounded-full font-bold text-xs uppercase tracking-wide ${getStatusColor(task.estado)}`}>
@@ -131,7 +127,7 @@ export const Task = () => {
                         <PencilIcon className="w-5 h-5" />
                       </button>
                       <button 
-                        onClick={() => handleDelete(task.id)} 
+                        onClick={() => handleDelete(task._id)} 
                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                       >
                         <TrashIcon className="w-5 h-5" />

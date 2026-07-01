@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { XMarkIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { useAdminStore } from "../../shared/store/adminStore";
 
 export const TaskModal = ({ isOpen, onClose, onSave, initialData }) => {
+  const { students, getStudents, supervisors, getSupervisors } = useAdminStore();
   const [formData, setFormData] = useState({
     titulo: "",
     descripcion: "",
@@ -13,13 +15,30 @@ export const TaskModal = ({ isOpen, onClose, onSave, initialData }) => {
   });
 
   useEffect(() => {
+    if (isOpen) {
+      getStudents();
+      getSupervisors();
+    }
+  }, [isOpen, getStudents, getSupervisors]);
+
+  useEffect(() => {
     if (initialData) {
-      setFormData(initialData);
+      const fechaIni = initialData.fechaInicio ? initialData.fechaInicio.split("T")[0] : "";
+      const fechaF = initialData.fechaFin ? initialData.fechaFin.split("T")[0] : "";
+      setFormData({
+        titulo: initialData.titulo || "",
+        descripcion: initialData.descripcion || "",
+        fechaInicio: fechaIni,
+        fechaFin: fechaF,
+        estado: initialData.estado || "pendiente",
+        estudiante: typeof initialData.estudiante === "object" ? initialData.estudiante?._id : (initialData.estudiante || ""),
+        supervisor: typeof initialData.supervisor === "object" ? initialData.supervisor?._id : (initialData.supervisor || "")
+      });
     } else {
       setFormData({
         titulo: "",
         descripcion: "",
-        fechaInicio: "",
+        fechaInicio: new Date().toISOString().split('T')[0],
         fechaFin: "",
         estado: "pendiente",
         estudiante: "",
@@ -130,14 +149,16 @@ export const TaskModal = ({ isOpen, onClose, onSave, initialData }) => {
                 value={formData.estudiante}
                 onChange={(e) => setFormData({ 
                   ...formData, 
-                  estudiante: e.target.value, 
-                  nombreEstudiante: e.target.options[e.target.selectedIndex].text 
+                  estudiante: e.target.value
                 })}
                 className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl focus:ring-4 focus:ring-[#C00000]/5 focus:border-[#C00000] outline-none transition text-sm text-gray-800 bg-white cursor-pointer"
               >
                 <option value="" disabled>-- Seleccione al Estudiante Practicante --</option>
-                <option value="65f1a2b3c4d5e6f7a8b9c111">Juan Pérez</option>
-                <option value="65f1a2b3c4d5e6f7a8b9c222">María García</option>
+                {students.map((s) => (
+                  <option key={s._id} value={s._id}>
+                    {s.nombre} ({s.carnet})
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -149,14 +170,16 @@ export const TaskModal = ({ isOpen, onClose, onSave, initialData }) => {
                 value={formData.supervisor}
                 onChange={(e) => setFormData({ 
                   ...formData, 
-                  supervisor: e.target.value, 
-                  nombreSupervisor: e.target.options[e.target.selectedIndex].text 
+                  supervisor: e.target.value
                 })}
                 className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl focus:ring-4 focus:ring-[#C00000]/5 focus:border-[#C00000] outline-none transition text-sm text-gray-800 bg-white cursor-pointer"
               >
                 <option value="" disabled>-- Seleccione al Contacto de la Empresa --</option>
-                <option value="65f1a2b3c4d5e6f7a8b9c022">Ing. Carlos López</option>
-                <option value="65f1a2b3c4d5e6f7a8b9c044">Licda. Marta Rodríguez</option>
+                {supervisors.map((sup) => (
+                  <option key={sup._id} value={sup._id}>
+                    {sup.nombre}
+                  </option>
+                ))}
               </select>
             </div>
 

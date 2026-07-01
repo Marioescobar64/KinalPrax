@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { XMarkIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { useAdminStore } from "../../shared/store/adminStore";
 
 export const PracticeModal = ({ isOpen, onClose, onSave, initialData }) => {
+  const { students, getStudents, companies, getCompanies } = useAdminStore();
   const [formData, setFormData] = useState({
     estudiante: "",
     empresa: "",
@@ -12,14 +14,25 @@ export const PracticeModal = ({ isOpen, onClose, onSave, initialData }) => {
     comentarios: ""
   });
 
+  useEffect(() => {
+    if (isOpen) {
+      getStudents();
+      getCompanies();
+    }
+  }, [isOpen, getStudents, getCompanies]);
+
   // Sincronizar el estado con los datos del backend o limpiar para un nuevo registro
   useEffect(() => {
     if (initialData) {
-      // Formatear la fecha para que el input HTML tipo 'date' la lea correctamente (YYYY-MM-DD)
       const fechaFormateada = initialData.fecha ? initialData.fecha.split('T')[0] : "";
       setFormData({
-        ...initialData,
-        fecha: fechaFormateada
+        estudiante: typeof initialData.estudiante === "object" ? initialData.estudiante?._id : (initialData.estudiante || ""),
+        empresa: typeof initialData.empresa === "object" ? initialData.empresa?._id : (initialData.empresa || ""),
+        fecha: fechaFormateada,
+        horas: initialData.horas || "",
+        actividades: initialData.actividades || "",
+        estado: initialData.estado || "pendiente",
+        comentarios: initialData.comentarios || ""
       });
     } else {
       setFormData({
@@ -36,7 +49,6 @@ export const PracticeModal = ({ isOpen, onClose, onSave, initialData }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Aseguramos que las horas se envíen como un número puro al backend
     onSave({
       ...formData,
       horas: Number(formData.horas)
@@ -81,15 +93,16 @@ export const PracticeModal = ({ isOpen, onClose, onSave, initialData }) => {
                 value={formData.estudiante}
                 onChange={(e) => setFormData({ 
                   ...formData, 
-                  estudiante: e.target.value, 
-                  nombreEstudiante: e.target.options[e.target.selectedIndex].text 
+                  estudiante: e.target.value
                 })}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#C00000]/10 focus:border-[#C00000] outline-none transition text-base bg-white shadow-sm cursor-pointer"
               >
                 <option value="" disabled>-- Seleccione un estudiante de la lista --</option>
-                {/* Los values simulan los ObjectIds que recibirá tu backend */}
-                <option value="65f1a2b3c4d5e6f7a8b9c011">Juan Fernando Pérez</option>
-                <option value="65f1a2b3c4d5e6f7a8b9c033">María Andre García</option>
+                {students.map((s) => (
+                  <option key={s._id} value={s._id}>
+                    {s.nombre} ({s.carnet})
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -103,14 +116,16 @@ export const PracticeModal = ({ isOpen, onClose, onSave, initialData }) => {
                 value={formData.empresa}
                 onChange={(e) => setFormData({ 
                   ...formData, 
-                  empresa: e.target.value, 
-                  nombreEmpresa: e.target.options[e.target.selectedIndex].text 
+                  empresa: e.target.value
                 })}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#C00000]/10 focus:border-[#C00000] outline-none transition text-base bg-white shadow-sm cursor-pointer"
               >
                 <option value="" disabled>-- Seleccione la empresa de destino --</option>
-                <option value="65f1a2b3c4d5e6f7a8b9c022">Tech Solutions</option>
-                <option value="65f1a2b3c4d5e6f7a8b9c044">Constructora Moderna</option>
+                {companies.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    {c.nombreEmpresa}
+                  </option>
+                ))}
               </select>
             </div>
 

@@ -1,30 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { SupervisorModal } from "./SupervisorModal";
-
-const mockSupervisors = [
-  { 
-    id: 1, 
-    nombre: "Ing. Carlos López", 
-    correo: "lopez@techsolutions.com", 
-    telefono: "+502 2541-2345",
-    empresa: "65f1a2b3c4d5e6f7a8b9c022",
-    nombreEmpresa: "Tech Solutions"
-  },
-  { 
-    id: 2, 
-    nombre: "Licda. Marta Rodríguez", 
-    correo: "marta.rodriguez@constructora.com", 
-    telefono: "+502 7894-5612",
-    empresa: "65f1a2b3c4d5e6f7a8b9c044",
-    nombreEmpresa: "Constructora Moderna"
-  },
-];
+import { useAdminStore } from "../../shared/store/adminStore";
 
 export const Supervisor = () => {
-  const [supervisors, setSupervisors] = useState(mockSupervisors);
+  const { supervisors, getSupervisors, createSupervisor, updateSupervisor, deleteSupervisor } = useAdminStore();
   const [showModal, setShowModal] = useState(false);
   const [selectedSupervisor, setSelectedSupervisor] = useState(null);
+
+  useEffect(() => {
+    getSupervisors();
+  }, [getSupervisors]);
 
   const handleAdd = () => {
     setSelectedSupervisor(null);
@@ -36,19 +22,35 @@ export const Supervisor = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm("¿Está seguro de que desea eliminar a este supervisor?")) {
-      setSupervisors(supervisors.filter(s => s.id !== id));
+      try {
+        await deleteSupervisor(id);
+      } catch (error) {
+        alert(error.message);
+      }
     }
   };
 
-  const handleSave = (data) => {
-    if (selectedSupervisor) {
-      setSupervisors(supervisors.map(s => s.id === selectedSupervisor.id ? { ...data, id: selectedSupervisor.id } : s));
-    } else {
-      setSupervisors([...supervisors, { ...data, id: Date.now() }]);
+  const handleSave = async (data) => {
+    try {
+      // Remover campos auxiliares de vista antes de enviar al backend
+      const payload = {
+        nombre: data.nombre,
+        correo: data.correo,
+        telefono: data.telefono,
+        empresa: data.empresa
+      };
+
+      if (selectedSupervisor) {
+        await updateSupervisor(selectedSupervisor._id, payload);
+      } else {
+        await createSupervisor(payload);
+      }
+      setShowModal(false);
+    } catch (error) {
+      alert(error.message);
     }
-    setShowModal(false);
   };
 
   return (
@@ -84,13 +86,13 @@ export const Supervisor = () => {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {supervisors.map((supervisor) => (
-                <tr key={supervisor.id} className="hover:bg-gray-50/80 transition-colors">
+                <tr key={supervisor._id} className="hover:bg-gray-50/80 transition-colors">
                   <td className="px-6 py-4 font-bold text-gray-800 text-base">
                     {supervisor.nombre}
                   </td>
                   <td className="px-6 py-4">
                     <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full font-semibold text-xs border border-blue-100">
-                      {supervisor.nombreEmpresa || "Empresa Externa"}
+                      {supervisor.empresa?.nombreEmpresa || supervisor.nombreEmpresa || "Empresa Externa"}
                     </span>
                   </td>
                   <td className="px-6 py-4 font-medium text-gray-600 select-all">{supervisor.correo}</td>
@@ -104,7 +106,7 @@ export const Supervisor = () => {
                         <PencilIcon className="w-5 h-5" />
                       </button>
                       <button 
-                        onClick={() => handleDelete(supervisor.id)} 
+                        onClick={() => handleDelete(supervisor._id)} 
                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                       >
                         <TrashIcon className="w-5 h-5" />

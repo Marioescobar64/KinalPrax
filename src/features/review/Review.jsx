@@ -1,26 +1,40 @@
 import { useState } from "react";
-import { PlusIcon, PencilIcon, TrashIcon, CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { ReviewModal } from "./ReviewModal";
 
 const mockReviews = [
-  { id: 1, student: "Juan Pérez", reviewer: "Dr. López", date: "2026-04-20", rating: 5, comments: "Excelente desempeño" },
-  { id: 2, student: "María García", reviewer: "Ing. Rodríguez", date: "2026-04-22", rating: 4, comments: "Buen trabajo general" },
+  { 
+    id: 1, 
+    practica: "65f1a2b3c4d5e6f7a8b9c999", 
+    nombrePractica: "Práctica Supervisada - Fase I (Juan Pérez)",
+    supervisor: "65f1a2b3c4d5e6f7a8b9c111", 
+    nombreSupervisor: "Dr. López",
+    fecha: "2026-04-20", 
+    comentario: "Excelente desempeño en el despliegue del entorno. El estudiante demuestra iniciativa." 
+  },
+  { 
+    id: 2, 
+    practica: "65f1a2b3c4d5e6f7a8b9c888", 
+    nombrePractica: "Práctica Técnica - Backend (María García)",
+    supervisor: "65f1a2b3c4d5e6f7a8b9c222", 
+    nombreSupervisor: "Ing. Rodríguez",
+    fecha: "2026-04-22", 
+    comentario: "Buen trabajo general en la estructuración de la base de datos, corregir nomenclatura de variables." 
+  },
 ];
 
 export const Review = () => {
   const [reviews, setReviews] = useState(mockReviews);
   const [showModal, setShowModal] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [formData, setFormData] = useState({ student: "", reviewer: "", date: "", rating: 5, comments: "" });
+  const [selectedReview, setSelectedReview] = useState(null);
 
   const handleAdd = () => {
-    setEditingId(null);
-    setFormData({ student: "", reviewer: "", date: "", rating: 5, comments: "" });
+    setSelectedReview(null);
     setShowModal(true);
   };
 
   const handleEdit = (review) => {
-    setEditingId(review.id);
-    setFormData(review);
+    setSelectedReview(review);
     setShowModal(true);
   };
 
@@ -30,137 +44,90 @@ export const Review = () => {
     }
   };
 
-  const handleSave = () => {
-    if (editingId) {
-      setReviews(reviews.map(r => r.id === editingId ? { ...formData, id: editingId } : r));
+  const handleSave = (data) => {
+    if (selectedReview) {
+      setReviews(reviews.map(r => r.id === selectedReview.id ? { ...data, id: selectedReview.id } : r));
     } else {
-      setReviews([...reviews, { ...formData, id: Date.now() }]);
+      setReviews([...reviews, { ...data, id: Date.now() }]);
     }
     setShowModal(false);
   };
 
-  const renderStars = (rating) => {
-    return "★".repeat(rating) + "☆".repeat(5 - rating);
-  };
-
   return (
-    <section className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-[#2C1506]">Revisiones</h1>
-          <p className="text-sm text-[#2C1506]/80 mt-1">Evaluaciones y revisiones de prácticas</p>
-        </div>
-        <button
-          onClick={handleAdd}
-          className="flex items-center gap-2 bg-[#C00000] text-white px-4 py-2 rounded-lg hover:bg-[#A00000] transition"
-        >
-          <PlusIcon className="w-5 h-5" />
-          Nueva Revisión
-        </button>
-      </div>
-
-      <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-[#FFF8F0] border-b border-[#C00000]/20">
-            <tr>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Estudiante</th>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Evaluador</th>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Fecha</th>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Calificación</th>
-              <th className="px-6 py-3 text-left font-semibold text-[#2C1506]">Comentarios</th>
-              <th className="px-6 py-3 text-center font-semibold text-[#2C1506]">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {reviews.map((review) => (
-              <tr key={review.id} className="border-b border-[#C00000]/10 hover:bg-[#FFF8F0]/50 transition">
-                <td className="px-6 py-4 text-[#2C1506] font-medium">{review.student}</td>
-                <td className="px-6 py-4 text-[#2C1506]/80">{review.reviewer}</td>
-                <td className="px-6 py-4 text-[#2C1506]/80">{review.date}</td>
-                <td className="px-6 py-4 text-yellow-500 text-lg">{renderStars(review.rating)}</td>
-                <td className="px-6 py-4 text-[#2C1506]/80 max-w-xs truncate">{review.comments}</td>
-                <td className="px-6 py-4 flex justify-center gap-2">
-                  <button
-                    onClick={() => handleEdit(review)}
-                    className="p-2 text-[#C00000] hover:bg-[#C00000]/10 rounded transition"
-                  >
-                    <PencilIcon className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(review.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded transition"
-                  >
-                    <TrashIcon className="w-4 h-4" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {showModal && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 shadow-lg">
-            <h2 className="text-xl font-bold text-[#2C1506] mb-4">
-              {editingId ? "Editar Revisión" : "Nueva Revisión"}
-            </h2>
-            <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Nombre del estudiante"
-                value={formData.student}
-                onChange={(e) => setFormData({ ...formData, student: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              />
-              <input
-                type="text"
-                placeholder="Evaluador"
-                value={formData.reviewer}
-                onChange={(e) => setFormData({ ...formData, reviewer: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              />
-              <input
-                type="date"
-                value={formData.date}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              />
-              <select
-                value={formData.rating}
-                onChange={(e) => setFormData({ ...formData, rating: parseInt(e.target.value) })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000]"
-              >
-                <option value={5}>5 estrellas</option>
-                <option value={4}>4 estrellas</option>
-                <option value={3}>3 estrellas</option>
-                <option value={2}>2 estrellas</option>
-                <option value={1}>1 estrella</option>
-              </select>
-              <textarea
-                placeholder="Comentarios"
-                value={formData.comments}
-                onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
-                className="w-full px-3 py-2 border border-[#C00000]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C00000] h-24"
-              />
-            </div>
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={handleSave}
-                className="flex-1 flex items-center justify-center gap-2 bg-[#C00000] text-white py-2 rounded-lg hover:bg-[#A00000] transition"
-              >
-                <CheckIcon className="w-4 h-4" /> Guardar
-              </button>
-              <button
-                onClick={() => setShowModal(false)}
-                className="flex-1 flex items-center justify-center gap-2 bg-gray-300 text-[#2C1506] py-2 rounded-lg hover:bg-gray-400 transition"
-              >
-                <XMarkIcon className="w-4 h-4" /> Cancelar
-              </button>
-            </div>
+    <div className="min-h-screen bg-[#072343] p-8 font-sans">
+      <section className="max-w-7xl mx-auto space-y-8">
+        
+        {/* HEADER */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-extrabold text-[#D97736] tracking-tight">Revisiones</h1>
+            <p className="text-sm text-gray-300 mt-1.5">Bitácora de evaluaciones, observaciones y feedback de los supervisores</p>
           </div>
+          <button
+            onClick={handleAdd}
+            className="flex items-center gap-2 bg-[#C00000] text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-black/20 hover:bg-[#A00000] transition-all transform hover:scale-[1.02]"
+          >
+            <PlusIcon className="w-5 h-5 stroke-[2.5]" />
+            Nueva Revisión
+          </button>
         </div>
-      )}
-    </section>
+
+        {/* TABLA */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-x-auto border border-white/10">
+          <table className="w-full text-sm text-[#2C1506]">
+            <thead className="bg-[#FFF8F0] border-b border-gray-100">
+              <tr>
+                <th className="px-6 py-4 text-left font-bold text-gray-700 tracking-wide">Práctica / Estudiante</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-700 tracking-wide">Supervisor Evaluador</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-700 tracking-wide">Observaciones / Comentario</th>
+                <th className="px-6 py-4 text-left font-bold text-gray-700 tracking-wide w-40">Fecha Revisión</th>
+                <th className="px-6 py-4 text-center font-bold text-gray-600 tracking-wide w-32">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {reviews.map((review) => (
+                <tr key={review.id} className="hover:bg-gray-50/80 transition-colors">
+                  <td className="px-6 py-4 font-bold text-gray-800">
+                    {review.nombrePractica || "Práctica no identificada"}
+                  </td>
+                  <td className="px-6 py-4 font-semibold text-[#C00000]">
+                    {review.nombreSupervisor || "Supervisor asignado"}
+                  </td>
+                  <td className="px-6 py-4 text-gray-600 max-w-md break-words">
+                    {review.comentario}
+                  </td>
+                  <td className="px-6 py-4 font-semibold text-gray-500 whitespace-nowrap">
+                    {review.fecha}
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex justify-center gap-2">
+                      <button 
+                        onClick={() => handleEdit(review)} 
+                        className="p-2 text-gray-400 hover:text-[#C00000] hover:bg-red-50 rounded-lg transition-all"
+                      >
+                        <PencilIcon className="w-5 h-5" />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(review.id)} 
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      >
+                        <TrashIcon className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <ReviewModal 
+          isOpen={showModal} 
+          onClose={() => setShowModal(false)} 
+          onSave={handleSave}
+          initialData={selectedReview}
+        />
+      </section>
+    </div>
   );
 };

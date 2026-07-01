@@ -1,16 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { StudentModal } from "./StudentModal";
-
-const mockStudents = [
-  { id: 1, carnet: "2022010", nombre: "Juan Fernando Pérez", carrera: "Informática", telefono: "5544-3322", correo: "juan.perez@kinal.edu.gt", horasRequeridas: 150, horasAcumuladas: 75 },
-  { id: 2, carnet: "2022045", nombre: "María Andre García", carrera: "Electrónica", telefono: "4411-2233", correo: "maria.garcia@kinal.edu.gt", horasRequeridas: 200, horasAcumuladas: 180 },
-];
+import { useAdminStore } from "../../shared/store/adminStore";
 
 export const Student = () => {
-  const [students, setStudents] = useState(mockStudents);
+  const { students, getStudents, createStudent, updateStudent, deleteStudent } = useAdminStore();
   const [showModal, setShowModal] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
+
+  useEffect(() => {
+    getStudents();
+  }, [getStudents]);
 
   const handleAdd = () => {
     setSelectedStudent(null);
@@ -22,19 +22,27 @@ export const Student = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm("¿Está seguro de que desea eliminar este estudiante?")) {
-      setStudents(students.filter(s => s.id !== id));
+      try {
+        await deleteStudent(id);
+      } catch (error) {
+        alert(error.message);
+      }
     }
   };
 
-  const handleSave = (data) => {
-    if (selectedStudent) {
-      setStudents(students.map(s => s.id === selectedStudent.id ? { ...data, id: selectedStudent.id } : s));
-    } else {
-      setStudents([...students, { ...data, id: Date.now() }]);
+  const handleSave = async (data) => {
+    try {
+      if (selectedStudent) {
+        await updateStudent(selectedStudent._id, data);
+      } else {
+        await createStudent(data);
+      }
+      setShowModal(false);
+    } catch (error) {
+      alert(error.message);
     }
-    setShowModal(false);
   };
 
   return (
@@ -74,7 +82,7 @@ export const Student = () => {
                 const porcentaje = Math.min(Math.round((student.horasAcumuladas / student.horasRequeridas) * 100), 100) || 0;
                 
                 return (
-                  <tr key={student.id} className="hover:bg-gray-50/80 transition-colors">
+                  <tr key={student._id} className="hover:bg-gray-50/80 transition-colors">
                     <td className="px-6 py-4 font-mono font-bold text-[#C00000] text-sm whitespace-nowrap">{student.carnet}</td>
                     <td className="px-6 py-4 font-bold text-gray-800 text-base">{student.nombre}</td>
                     <td className="px-6 py-4 text-gray-600 font-medium">{student.carrera}</td>
@@ -101,7 +109,7 @@ export const Student = () => {
                         <button onClick={() => handleEdit(student)} className="p-2 text-gray-400 hover:text-[#C00000] hover:bg-red-50 rounded-lg transition-all">
                           <PencilIcon className="w-5 h-5" />
                         </button>
-                        <button onClick={() => handleDelete(student.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                        <button onClick={() => handleDelete(student._id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all">
                           <TrashIcon className="w-5 h-5" />
                         </button>
                       </div>
