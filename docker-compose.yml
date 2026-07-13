@@ -1,0 +1,76 @@
+services:
+  postgres-db:
+    image: postgres:16-alpine
+    container_name: kinalprax-postgres
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d auth_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mongodb:
+    image: mongo:7
+    container_name: kinalprax-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: src/Dockerfile
+    container_name: kinalprax-auth
+    ports:
+      - "5033:8080"
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=postgres-db;Port=5432;Database=auth_db;Username=postgres;Password=admin
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - JwtSettings__SecretKey=kinalprax_super_secret_key_2026Production
+      - JwtSettings__Issuer=AuthService
+      - JwtSettings__Audience=AuthService
+      - JwtSettings__ExpiryInMinutes=480
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+
+  admin-api:
+    build:
+      context: ./services/admin-api
+      dockerfile: Dockerfile
+    container_name: kinalprax-admin-api
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - URI_MONGODB=mongodb://mongodb:27017/GIPS
+      - NODE_ENV=development
+    depends_on:
+      - mongodb
+
+  user-api:
+    build:
+      context: ./services/user-api
+      dockerfile: Dockerfile
+    container_name: kinalprax-user-api
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - URI_MONGODB=mongodb://mongodb:27017/GIPS
+      - NODE_ENV=development
+    depends_on:
+      - mongodb
+
+volumes:
+  pgdata:
+  mongodata:

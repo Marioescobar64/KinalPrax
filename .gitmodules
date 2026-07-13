@@ -1,0 +1,15 @@
+[submodule "services/auth-service"]
+	path = services/auth-service
+	url = https://github.com/Marioescobar64/Auth-Service-KinalPrax.git
+[submodule "services/admin-api"]
+	path = services/admin-api
+	url = https://github.com/Marioescobar64/GIPS-Admin-API.git
+[submodule "services/user-api"]
+	path = services/user-api
+	url = https://github.com/Marioescobar64/GIPS-User-API.git
+[submodule "clients/client-user-web"]
+	path = clients/client-user-web
+	url = https://github.com/Marioescobar64/GIPS-Client-User-Web.git
+[submodule "clients/client-user-mobile"]
+	path = clients/client-user-mobile
+	url = https://github.com/Marioescobar64/GIPS-Client-User-Mobile.git
