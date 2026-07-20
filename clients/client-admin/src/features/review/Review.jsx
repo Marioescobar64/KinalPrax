@@ -1,32 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { ReviewModal } from "./ReviewModal";
-
-const mockReviews = [
-  { 
-    id: 1, 
-    practica: "65f1a2b3c4d5e6f7a8b9c999", 
-    nombrePractica: "Práctica Supervisada - Fase I (Juan Pérez)",
-    supervisor: "65f1a2b3c4d5e6f7a8b9c111", 
-    nombreSupervisor: "Dr. López",
-    fecha: "2026-04-20", 
-    comentario: "Excelente desempeño en el despliegue del entorno. El estudiante demuestra iniciativa." 
-  },
-  { 
-    id: 2, 
-    practica: "65f1a2b3c4d5e6f7a8b9c888", 
-    nombrePractica: "Práctica Técnica - Backend (María García)",
-    supervisor: "65f1a2b3c4d5e6f7a8b9c222", 
-    nombreSupervisor: "Ing. Rodríguez",
-    fecha: "2026-04-22", 
-    comentario: "Buen trabajo general en la estructuración de la base de datos, corregir nomenclatura de variables." 
-  },
-];
+import { useAdminStore } from "../../shared/store/adminStore";
 
 export const Review = () => {
-  const [reviews, setReviews] = useState(mockReviews);
+  const { reviews, getReviews, createReview, updateReview, deleteReview } = useAdminStore();
   const [showModal, setShowModal] = useState(false);
   const [selectedReview, setSelectedReview] = useState(null);
+
+  useEffect(() => {
+    getReviews();
+  }, [getReviews]);
 
   const handleAdd = () => {
     setSelectedReview(null);
@@ -38,19 +22,27 @@ export const Review = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm("¿Está seguro de que desea eliminar esta revisión?")) {
-      setReviews(reviews.filter(r => r.id !== id));
+      try {
+        await deleteReview(id);
+      } catch (error) {
+        alert(error.message);
+      }
     }
   };
 
-  const handleSave = (data) => {
-    if (selectedReview) {
-      setReviews(reviews.map(r => r.id === selectedReview.id ? { ...data, id: selectedReview.id } : r));
-    } else {
-      setReviews([...reviews, { ...data, id: Date.now() }]);
+  const handleSave = async (data) => {
+    try {
+      if (selectedReview) {
+        await updateReview(selectedReview._id, data);
+      } else {
+        await createReview(data);
+      }
+      setShowModal(false);
+    } catch (error) {
+      alert(error.message);
     }
-    setShowModal(false);
   };
 
   return (
@@ -86,18 +78,18 @@ export const Review = () => {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {reviews.map((review) => (
-                <tr key={review.id} className="hover:bg-gray-50/80 transition-colors">
+                <tr key={review._id} className="hover:bg-gray-50/80 transition-colors">
                   <td className="px-6 py-4 font-bold text-gray-800">
-                    {review.nombrePractica || "Práctica no identificada"}
+                    {review.practica?.nombre || "Práctica no identificada"}
                   </td>
                   <td className="px-6 py-4 font-semibold text-[#C00000]">
-                    {review.nombreSupervisor || "Supervisor asignado"}
+                    {review.supervisor?.nombre || "Supervisor asignado"}
                   </td>
                   <td className="px-6 py-4 text-gray-600 max-w-md break-words">
                     {review.comentario}
                   </td>
                   <td className="px-6 py-4 font-semibold text-gray-500 whitespace-nowrap">
-                    {review.fecha}
+                    {review.fecha ? new Date(review.fecha).toLocaleDateString() : "—"}
                   </td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex justify-center gap-2">
@@ -108,7 +100,7 @@ export const Review = () => {
                         <PencilIcon className="w-5 h-5" />
                       </button>
                       <button 
-                        onClick={() => handleDelete(review.id)} 
+                        onClick={() => handleDelete(review._id)} 
                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                       >
                         <TrashIcon className="w-5 h-5" />

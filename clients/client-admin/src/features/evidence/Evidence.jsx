@@ -1,30 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PlusIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { EvidenceModal } from "./EvidenceModal";
-
-const mockEvidences = [
-  { 
-    id: 1, 
-    practica: "65f1a2b3c4d5e6f7a8b9c999", 
-    nombrePractica: "Práctica Supervisada - Fase I", 
-    archivo: "reporte_semana1.pdf", 
-    descripcion: "Reporte de actividades del módulo de autenticación", 
-    fecha: "2026-04-15" 
-  },
-  { 
-    id: 2, 
-    practica: "65f1a2b3c4d5e6f7a8b9c888", 
-    nombrePractica: "Práctica Técnica - Backend", 
-    archivo: "diagrama_arquitectura.png", 
-    descripcion: "Diagrama de entidad relación y flujos de endpoints", 
-    fecha: "2026-04-20" 
-  },
-];
+import { useAdminStore } from "../../shared/store/adminStore";
 
 export const Evidence = () => {
-  const [evidences, setEvidences] = useState(mockEvidences);
+  const { evidences, getEvidences, createEvidence, updateEvidence, deleteEvidence } = useAdminStore();
   const [showModal, setShowModal] = useState(false);
   const [selectedEvidence, setSelectedEvidence] = useState(null);
+
+  useEffect(() => {
+    getEvidences();
+  }, [getEvidences]);
 
   const handleAdd = () => {
     setSelectedEvidence(null);
@@ -36,19 +22,27 @@ export const Evidence = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm("¿Está seguro de que desea eliminar esta evidencia?")) {
-      setEvidences(evidences.filter(e => e.id !== id));
+      try {
+        await deleteEvidence(id);
+      } catch (error) {
+        alert(error.message);
+      }
     }
   };
 
-  const handleSave = (data) => {
-    if (selectedEvidence) {
-      setEvidences(evidences.map(e => e.id === selectedEvidence.id ? { ...data, id: selectedEvidence.id } : e));
-    } else {
-      setEvidences([...evidences, { ...data, id: Date.now() }]);
+  const handleSave = async (data) => {
+    try {
+      if (selectedEvidence) {
+        await updateEvidence(selectedEvidence._id, data);
+      } else {
+        await createEvidence(data);
+      }
+      setShowModal(false);
+    } catch (error) {
+      alert(error.message);
     }
-    setShowModal(false);
   };
 
   return (
@@ -84,18 +78,18 @@ export const Evidence = () => {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {evidences.map((evidence) => (
-                <tr key={evidence.id} className="hover:bg-gray-50/80 transition-colors">
+                <tr key={evidence._id} className="hover:bg-gray-50/80 transition-colors">
                   <td className="px-6 py-4 font-bold text-[#C00000] break-all max-w-xs">
                     <span className="underline cursor-pointer hover:text-[#A00000]">{evidence.archivo}</span>
                   </td>
                   <td className="px-6 py-4 font-medium text-gray-700">
-                    {evidence.nombrePractica || "Práctica no especificada"}
+                    {evidence.practica?.nombre || "Práctica no especificada"}
                   </td>
                   <td className="px-6 py-4 text-gray-600 max-w-sm">
                     {evidence.descripcion || "Sin descripción disponible"}
                   </td>
                   <td className="px-6 py-4 font-semibold text-gray-500 whitespace-nowrap">
-                    {evidence.fecha}
+                    {evidence.fecha ? new Date(evidence.fecha).toLocaleDateString() : "—"}
                   </td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex justify-center gap-2">
@@ -106,7 +100,7 @@ export const Evidence = () => {
                         <PencilIcon className="w-5 h-5" />
                       </button>
                       <button 
-                        onClick={() => handleDelete(evidence.id)} 
+                        onClick={() => handleDelete(evidence._id)} 
                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
                       >
                         <TrashIcon className="w-5 h-5" />
