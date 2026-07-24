@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
-import { PlusIcon, PencilIcon, TrashIcon, ClockIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, PencilIcon, TrashIcon, ClockIcon, DocumentArrowDownIcon } from "@heroicons/react/24/outline";
 import { ReposteHoursModal } from "./ReposteHoursModal.jsx";
 import { useAdminStore } from "../../shared/store/adminStore";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export const ReposteHours = () => {
   const { progressRecords, getProgressRecords, createProgressRecord, updateProgressRecord, deleteProgressRecord } = useAdminStore();
@@ -57,6 +59,46 @@ export const ReposteHours = () => {
   const globalAprobadas = progressRecords.reduce((sum, p) => sum + (p.horasAprobadas || 0), 0);
   const globalPendientes = progressRecords.reduce((sum, p) => sum + (p.horasPendientes || 0), 0);
 
+  const generatePDF = () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("Reporte de Horas - KinalPrax", pageWidth / 2, 20, { align: "center" });
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Fecha: ${new Date().toLocaleDateString("es-GT")}`, 14, 30);
+    doc.text(`Total de registros: ${progressRecords.length}`, 14, 36);
+
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Totales: ${globalTotales} hrs  |  Aprobadas: ${globalAprobadas} hrs  |  Pendientes: ${globalPendientes} hrs`, 14, 46);
+
+    const tableData = progressRecords.map((p) => {
+      const pct = Math.min(Math.round((p.horasAprobadas / p.horasTotales) * 100), 100) || 0;
+      return [
+        p.estudiante?.nombre || "Sin nombre",
+        `${p.horasTotales} hrs`,
+        `${p.horasAprobadas} hrs`,
+        `${p.horasPendientes} hrs`,
+        `${pct}%`
+      ];
+    });
+
+    autoTable(doc, {
+      startY: 52,
+      head: [["Estudiante", "Totales", "Aprobadas", "Pendientes", "Progreso"]],
+      body: tableData,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [192, 0, 0] },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+    });
+
+    doc.save(`reporte-horas-kinalprax-${new Date().toISOString().split("T")[0]}.pdf`);
+  };
+
   return (
     <div className="min-h-screen bg-[#072343] p-8 font-sans">
       <section className="max-w-7xl mx-auto space-y-8">
@@ -67,13 +109,22 @@ export const ReposteHours = () => {
             <h1 className="text-4xl font-extrabold text-[#D97736] tracking-tight">Reporte de Horas</h1>
             <p className="text-sm text-gray-300 mt-1.5">Monitoreo y control del acumulado global de horas de práctica</p>
           </div>
-          <button
-            onClick={handleAdd}
-            className="flex items-center gap-2 bg-[#C00000] text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-black/20 hover:bg-[#A00000] transition-all transform hover:scale-[1.02]"
-          >
-            <PlusIcon className="w-5 h-5 stroke-[2.5]" />
-            Nuevo Registro
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={generatePDF}
+              className="flex items-center gap-2 bg-[#072343] text-white px-5 py-3 rounded-xl font-bold shadow-lg hover:bg-[#0a3060] transition-all transform hover:scale-[1.02]"
+            >
+              <DocumentArrowDownIcon className="w-5 h-5 stroke-[2.5]" />
+              Generar PDF
+            </button>
+            <button
+              onClick={handleAdd}
+              className="flex items-center gap-2 bg-[#C00000] text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-black/20 hover:bg-[#A00000] transition-all transform hover:scale-[1.02]"
+            >
+              <PlusIcon className="w-5 h-5 stroke-[2.5]" />
+              Nuevo Registro
+            </button>
+          </div>
         </div>
 
         {/* TARJETAS DE MÉTRICAS */}
